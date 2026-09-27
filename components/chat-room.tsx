@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icon";
 import { lessonObjectives, lessonTitle, practicePrompt, teacherImage } from "@/lib/content";
@@ -9,6 +10,12 @@ import { t } from "@/lib/i18n";
 import type { ChatMode, Lesson, Locale, ProgressState, Teacher } from "@/lib/types";
 
 type ChatMessage = { id: string; role: "user" | "assistant"; text: string };
+
+const chipModes = [
+  ["hint", "chat.hint", "hint"],
+  ["example", "chat.example", "book"],
+  ["practice", "chat.practice", "check"],
+] as const;
 
 export function ChatRoom({
   locale,
@@ -27,6 +34,7 @@ export function ChatRoom({
   initialProgress: ProgressState;
   isGuest: boolean;
 }) {
+  const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
   const [progress, setProgress] = useState(initialProgress);
   const [draft, setDraft] = useState("");
@@ -38,6 +46,7 @@ export function ChatRoom({
   const [unseen, setUnseen] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const end = useRef<HTMLDivElement>(null);
+  const field = useRef<HTMLTextAreaElement>(null);
   const lastAssistant = [...messages].reverse().find((message) => message.role === "assistant")?.text ?? "";
   const objectives = lessonObjectives(lesson, locale);
   const current = lesson.practice[progress.practiceIndex];
@@ -57,7 +66,24 @@ export function ChatRoom({
   useEffect(() => {
     if (stick) end.current?.scrollIntoView({ block: "end" });
     else setUnseen(true);
-  }, [messages, stick]);
+  }, [messages, sending, stick]);
+
+  useEffect(() => {
+    const node = field.current;
+    if (!node) return;
+    node.style.height = "0px";
+    node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
+  }, [draft]);
+
+  async function setLocale(next: Locale) {
+    if (next === locale) return;
+    await fetch("/api/preferences", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ locale: next }),
+    });
+    router.refresh();
+  }
 
   async function send(mode: ChatMode, text: string, clientMessageId?: string) {
     if (sending) return;
@@ -69,6 +95,7 @@ export function ChatRoom({
     const id = clientMessageId || crypto.randomUUID();
     setSending(true);
     setError(null);
+    setStick(true);
     try {
       const response = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
@@ -101,40 +128,46 @@ export function ChatRoom({
     }
   }
 
-  const portrait = teacherImage(teacher);
+  function userText(text: string) {
+    const labels = { hint: "chat.hint", example: "chat.example", practice: "chat.practice" } as const;
+    if (text === "hint" || text === "example" || text === "practice") return t(locale, labels[text]);
+    return text;
+  }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-1rem)] w-full max-w-[760px] flex-col px-5 md:min-h-[calc(100dvh-5rem)]">
-      <header className="flex items-center gap-3 py-3">
-        <Link href={`/teachers/${teacher.id}`} className="grid size-11 place-items-center rounded-full text-primary" aria-label={t(locale, "common.back")}>
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-white">
+      <header className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2 md:px-5">
+        <Link href={`/teachers/${teacher.id}`} className="grid size-11 shrink-0 place-items-center rounded-full text-primary" aria-label={t(locale, "common.back")}>
           <Icon name="back" />
         </Link>
-        {portrait ? (
-          <Image src={portrait} alt={teacher.name[locale]} width={44} height={44} className="size-11 rounded-full object-cover" style={{ objectPosition: "50% 20%" }} />
-        ) : (
-          <span className="grid size-11 place-items-center rounded-full font-semibold" style={{ background: teacher.accentBackground }}>
-            {teacher.name.en.slice(-1)}
-          </span>
-        )}
-        <div className="min-w-0">
-          <p className="truncate font-semibold">{teacher.name[locale]}</p>
+        <Face teacher={teacher} size={40} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold leading-tight">{teacher.name[locale]}</p>
           <p className="truncate text-sm text-muted">
-            {t(locale, "teacher.ai")} · {teacher.subject[locale]}
+            {t(locale, "teacher.ai")} · {lessonTitle(lesson, locale)}
           </p>
         </div>
+        <div className="flex shrink-0 rounded-full bg-[#F4F8FF] p-1" role="group" aria-label={t(locale, "profile.locale")}>
+          {(["th", "en"] as const).map((item) => (
+            <button key={item} type="button" aria-pressed={locale === item} onClick={() => setLocale(item)} className={`min-h-11 rounded-full px-3 text-sm font-semibold ${locale === item ? "bg-primary text-white" : "text-muted"}`}>
+              {item === "th" ? "TH" : "EN"}
+            </button>
+          ))}
+        </div>
       </header>
-      <p className="rounded-[18px] bg-surface px-4 py-3 text-sm font-semibold">{lessonTitle(lesson, locale)}</p>
+
       {isGuest ? (
-        <p className="mt-3 rounded-[18px] bg-[#E7EDFF] px-4 py-3 text-sm">
+        <p className="shrink-0 bg-[#F4F8FF] px-4 py-2 text-center text-sm md:px-6">
           {t(locale, "guest.banner")}{" "}
           <Link href="/profile" className="font-semibold text-primary">
             {t(locale, "guest.signin")}
           </Link>
         </p>
       ) : null}
+
       <div
         ref={scroller}
-        className="mt-4 flex flex-1 flex-col gap-3 overflow-y-auto"
+        className="min-h-0 flex-1 overflow-y-auto"
         onScroll={(event) => {
           const node = event.currentTarget;
           const near = node.scrollHeight - node.scrollTop - node.clientHeight < 80;
@@ -142,101 +175,141 @@ export function ChatRoom({
           if (near) setUnseen(false);
         }}
       >
-        {messages.map((message) => (
-          <p
-            key={message.id}
-            className={`max-w-[90%] whitespace-pre-wrap rounded-[18px] px-4 py-3 ${message.role === "user" ? "ml-auto bg-primary text-white" : ""}`}
-            style={message.role === "assistant" ? { background: teacher.accentBackground } : undefined}
-          >
-            <span className="sr-only">{message.role === "user" ? t(locale, "chat.you") : teacher.name[locale]}: </span>
-            {message.text}
-          </p>
-        ))}
-        <div ref={end} />
+        <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-4 py-6 md:px-6">
+          {messages.map((message) =>
+            message.role === "assistant" ? (
+              <article key={message.id} className="flex gap-3">
+                <Face teacher={teacher} size={32} />
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <p className="text-sm font-semibold leading-none">{teacher.name[locale]}</p>
+                  <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7">{message.text}</p>
+                </div>
+              </article>
+            ) : (
+              <article key={message.id} className="flex justify-end">
+                <p className="max-w-[min(100%,32rem)] whitespace-pre-wrap rounded-[18px] bg-[#E7EDFF] px-4 py-2.5 text-[15px] leading-7 text-ink">
+                  <span className="sr-only">{t(locale, "chat.you")}: </span>
+                  {userText(message.text)}
+                </p>
+              </article>
+            ),
+          )}
+          {sending ? (
+            <article className="flex gap-3" aria-hidden>
+              <Face teacher={teacher} size={32} />
+              <div className="min-w-0 flex-1 pt-0.5">
+                <p className="text-sm font-semibold leading-none">{teacher.name[locale]}</p>
+                <p className="mt-2 text-sm text-muted">{t(locale, "chat.thinking")}</p>
+              </div>
+            </article>
+          ) : null}
+          <div ref={end} />
+        </div>
       </div>
+
       <div aria-live="polite" className="sr-only">
         {sending ? t(locale, "chat.thinking") : lastAssistant}
       </div>
-      {unseen ? (
-        <button type="button" className="mx-auto mt-2 min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white" onClick={() => end.current?.scrollIntoView({ block: "end" })}>
-          {t(locale, "chat.newMessages")}
-        </button>
-      ) : null}
-      {progress.status === "completed" ? (
-        <section className="mt-3 rounded-[20px] border border-border bg-surface p-4">
-          <h2 className="text-[18px]">{t(locale, "lesson.complete")}</h2>
-          <p className="mt-2 text-sm font-semibold">{t(locale, "chat.goals")}</p>
-          <ul className="mt-1 grid gap-1 text-sm">
-            {objectives.map((goal, index) => (
-              <li key={goal} className="flex items-center gap-2">
-                <Icon name={progress.results[index] ? "check" : "close"} className="size-4" />
-                {goal}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-sm text-muted">
-            {t(locale, "chat.attempts")}: {progress.attempts} · {t(locale, "chat.hints")}: {progress.hintsUsed}
-          </p>
-          <Link href="/learning" className="mt-3 inline-flex min-h-12 items-center font-semibold text-primary">
-            {t(locale, "chat.next")}
-          </Link>
-        </section>
-      ) : null}
-      {progress.phase === "awaiting" && current ? (
-        <section className="mt-3 rounded-[20px] bg-[#F4F8FF] p-4">
-          <p className="text-sm font-semibold">{t(locale, "chat.practiceCard")}</p>
-          <p className="mt-1">{practicePrompt(current, locale)}</p>
-        </section>
-      ) : null}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {([
-          ["hint", "chat.hint", "hint"],
-          ["example", "chat.example", "book"],
-          ["practice", "chat.practice", "check"],
-        ] as const).map(([mode, key, icon]) => (
-          <button key={mode} type="button" disabled={sending} onClick={() => send(mode, "")} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#E7EDFF] px-3 text-sm font-semibold text-primary disabled:opacity-60">
-            <Icon name={icon} className="size-4" />
-            {t(locale, key)}
-          </button>
-        ))}
-      </div>
-      {offline ? <p className="mt-2 text-sm text-muted">{t(locale, "chat.offline")}</p> : null}
-      {error ? (
-        <p className="mt-2 text-sm text-error">
-          {error}{" "}
-          {retry ? (
-            <button type="button" className="font-semibold underline" onClick={() => send(retry.mode, retry.text, retry.id)}>
-              {t(locale, "chat.retry")}
+
+      <div className="relative shrink-0 bg-white px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-1 md:px-4">
+        {unseen ? (
+          <div className="absolute inset-x-0 bottom-full z-10 flex justify-center pb-2">
+            <button type="button" className="min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(54,85,214,0.28)]" onClick={() => end.current?.scrollIntoView({ block: "end" })}>
+              {t(locale, "chat.newMessages")}
             </button>
+          </div>
+        ) : null}
+        <div className="mx-auto w-full max-w-[760px]">
+          {progress.status === "completed" ? (
+            <section className="mb-3 rounded-[20px] border border-border bg-[#F4F8FF] p-4">
+              <h2 className="text-[18px]">{t(locale, "lesson.complete")}</h2>
+              <p className="mt-2 text-sm font-semibold">{t(locale, "chat.goals")}</p>
+              <ul className="mt-1 grid gap-1 text-sm">
+                {objectives.map((goal, index) => (
+                  <li key={goal} className="flex items-center gap-2">
+                    <Icon name={progress.results[index] ? "check" : "close"} className="size-4" />
+                    {goal}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-sm text-muted">
+                {t(locale, "chat.attempts")}: {progress.attempts} · {t(locale, "chat.hints")}: {progress.hintsUsed}
+              </p>
+              <Link href="/learning" className="mt-3 inline-flex min-h-12 items-center font-semibold text-primary">
+                {t(locale, "chat.next")}
+              </Link>
+            </section>
           ) : null}
-        </p>
-      ) : null}
-      {sending ? <p className="mt-2 text-sm text-muted">{t(locale, "chat.thinking")}</p> : null}
-      <form
-        className="sticky bottom-0 mt-3 flex items-end gap-2 bg-bg pb-[max(12px,env(safe-area-inset-bottom))] pt-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void send("teach", draft);
-        }}
-      >
-        <label className="min-w-0 flex-1">
-          <span className="sr-only">{t(locale, "chat.placeholder")}</span>
-          <textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder={t(locale, "chat.placeholder")}
-            rows={2}
-            maxLength={4000}
-            className="w-full resize-none rounded-[12px] border border-border bg-surface px-3 py-3 outline-none"
-          />
-        </label>
-        <button type="submit" disabled={sending || !draft.trim()} className="grid size-12 place-items-center rounded-[14px] bg-primary text-white disabled:bg-border disabled:text-muted" aria-label={t(locale, "chat.placeholder")}>
-          <Icon name="send" />
-        </button>
-      </form>
-      {draft.length >= 1600 ? <p className={`text-right text-xs ${draft.length > 2000 ? "text-error" : "text-muted"}`}>{draft.length}/2000</p> : null}
-      <p className="pb-2 text-xs text-muted">{t(locale, "chat.aiNotice")}</p>
+          {progress.phase === "awaiting" && current ? (
+            <section className="mb-3 rounded-[20px] border border-border bg-[#F4F8FF] px-4 py-3">
+              <p className="text-sm font-semibold text-primary">{t(locale, "chat.practiceCard")}</p>
+              <p className="mt-1">{practicePrompt(current, locale)}</p>
+            </section>
+          ) : null}
+          {offline ? <p className="mb-2 text-sm text-muted">{t(locale, "chat.offline")}</p> : null}
+          {error ? (
+            <p className="mb-2 text-sm text-error">
+              {error}{" "}
+              {retry ? (
+                <button type="button" className="font-semibold underline" onClick={() => send(retry.mode, retry.text, retry.id)}>
+                  {t(locale, "chat.retry")}
+                </button>
+              ) : null}
+            </p>
+          ) : null}
+          <div className="mb-2 flex flex-wrap gap-2">
+            {chipModes.map(([mode, key, icon]) => (
+              <button key={mode} type="button" disabled={sending} onClick={() => send(mode, "")} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-white px-3 text-sm font-semibold text-primary disabled:opacity-60">
+                <Icon name={icon} className="size-4" />
+                {t(locale, key)}
+              </button>
+            ))}
+          </div>
+          <form
+            className="rounded-[24px] border border-border bg-white shadow-[0_8px_28px_rgba(54,85,214,0.08)]"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void send("teach", draft);
+            }}
+          >
+            <label className="block">
+              <span className="sr-only">{t(locale, "chat.placeholder")}</span>
+              <textarea
+                ref={field}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder={t(locale, "chat.placeholder")}
+                rows={1}
+                maxLength={4000}
+                className="max-h-40 min-h-12 w-full resize-none bg-transparent px-4 pt-3.5 text-[15px] leading-6 outline-none"
+              />
+            </label>
+            <div className="flex items-center justify-between gap-3 px-2 pb-2">
+              <p className={`px-2 text-xs ${draft.length > 2000 ? "text-error" : "text-muted"} ${draft.length >= 1600 ? "" : "invisible"}`} aria-hidden={draft.length < 1600}>
+                {draft.length}/2000
+              </p>
+              <button type="submit" disabled={sending || !draft.trim()} className="grid size-11 place-items-center rounded-full bg-primary text-white disabled:bg-border disabled:text-muted" aria-label={t(locale, "chat.send")}>
+                <Icon name="send" />
+              </button>
+            </div>
+          </form>
+          <p className="px-2 pt-2 text-center text-xs text-muted">{t(locale, "chat.aiNotice")}</p>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function Face({ teacher, size }: { teacher: Teacher; size: 32 | 40 }) {
+  const portrait = teacherImage(teacher);
+  const box = size === 40 ? "size-10" : "size-8";
+  if (portrait) {
+    return <Image src={portrait} alt="" width={size} height={size} className={`${box} shrink-0 rounded-full object-cover`} style={{ objectPosition: "50% 20%" }} />;
+  }
+  return (
+    <span className={`grid ${box} shrink-0 place-items-center rounded-full text-sm font-semibold`} style={{ background: teacher.accentBackground }}>
+      {teacher.name.en.slice(-1)}
+    </span>
   );
 }

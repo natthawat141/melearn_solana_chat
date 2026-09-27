@@ -17,7 +17,8 @@ const items = [
 export function AppShell({ locale, children }: { locale: Locale; children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const focus = pathname.startsWith("/learn") || pathname.startsWith("/unlock");
+  const chat = pathname.startsWith("/learn");
+  const focus = chat || pathname.startsWith("/unlock");
 
   async function setLocale(next: Locale) {
     await fetch("/api/preferences", {
@@ -29,7 +30,7 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
   }
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[220px_minmax(0,1fr)]">
+    <div className={`${chat ? "h-dvh overflow-hidden" : "min-h-dvh"} md:grid md:grid-cols-[220px_minmax(0,1fr)]`}>
       <aside className="hidden border-r border-border bg-surface md:flex md:flex-col md:px-4 md:py-6">
         <Link href="/" className="flex items-center gap-3 rounded-[14px]">
           <Image src="/brand/logo.png" alt="Melearn Chat" width={48} height={48} className="size-12 object-contain" />
@@ -47,8 +48,8 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
           })}
         </nav>
       </aside>
-      <div className="min-w-0">
-        <header className={`${focus ? "hidden md:flex" : "flex"} items-center justify-between gap-3 px-5 py-4`}>
+      <div className={`min-w-0 ${chat ? "flex h-full min-h-0 flex-col bg-white" : ""}`}>
+        <header className={`${chat ? "hidden" : "flex"} items-center justify-between gap-3 px-5 py-4`}>
           <Link href="/" className="flex items-center gap-2 md:hidden">
             <Image src="/brand/logo.png" alt="Melearn Chat" width={40} height={40} className="size-10 object-contain" />
             <span className="font-semibold">Melearn</span>
@@ -66,7 +67,7 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
             </Link>
           </div>
         </header>
-        <main id="main" className={focus ? "pb-6" : "pb-28 md:pb-10"}>
+        <main id="main" className={chat ? "flex min-h-0 flex-1 flex-col overflow-hidden" : focus ? "pb-6" : "pb-28 md:pb-10"}>
           {children}
         </main>
         <nav className={`${focus ? "hidden" : "fixed"} inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1 md:hidden`} aria-label="Main">
