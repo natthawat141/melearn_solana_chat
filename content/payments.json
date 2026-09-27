@@ -1,0 +1,17 @@
+{
+  "network": "devnet",
+  "token": "native-sol",
+  "tokenLabel": {
+    "th": "SOL บน devnet (โทเคนทดสอบ ไม่ใช่ USDC จริง)",
+    "en": "Devnet SOL (a test token, not real USDC)"
+  },
+  "recipient": "CByHmPLFQsDEoa8WvEGozBjfgMrHx36eGczvsiyCTRbS",
+  "pricesLamports": {
+    "english-cafe-01": 10000000,
+    "math-discount-02": 10000000
+  },
+  "accessTerms": {
+    "th": "สิทธิ์เรียนบทนี้ผูกกับบัญชี Melearn ที่ชำระเงิน และในเดโมนี้ไม่มีวันหมดอายุ การชำระคือการโอน SOL บน Solana devnet ไปยังที่อยู่รับเงินด้านล่าง ส่วนแบ่งรายได้บนเชนยังไม่เปิดใน MVP นี้",
+    "en": "Access belongs to the Melearn account that paid. In this demo it does not expire. Payment is a SOL transfer on Solana devnet to the recipient below. On-chain revenue split is not part of this MVP."
+  }
+}

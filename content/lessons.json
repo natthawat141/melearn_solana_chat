@@ -1,0 +1,232 @@
+[
+  {
+    "id": "english-intro-01",
+    "teacherId": "ray",
+    "version": 1,
+    "title": "แนะนำตัวเป็นภาษาอังกฤษ",
+    "titleEn": "Introduce yourself in English",
+    "summary": "บอกชื่อ สิ่งที่ชอบ และถามชื่อคู่สนทนา",
+    "summaryEn": "Say your name, something you like, and ask the other person's name",
+    "level": "beginner",
+    "estimatedMinutes": 5,
+    "access": "free",
+    "objectives": ["บอกชื่อได้", "บอกสิ่งที่ชอบได้", "ถามชื่อคู่สนทนาได้"],
+    "objectivesEn": ["Say your name", "Say one thing you like", "Ask the other person's name"],
+    "concepts": ["My name is ... / I am ...", "I like + noun / verb-ing", "What is your name?"],
+    "conceptsEn": ["My name is ... / I am ...", "I like + noun / verb-ing", "What is your name?"],
+    "opening": "Hi! I’m Ray. What’s your name?",
+    "practice": [
+      {
+        "id": "name",
+        "prompt": "ลองบอกชื่อเป็นภาษาอังกฤษ",
+        "promptEn": "Say your name in English",
+        "example": "My name is Dul.",
+        "feedback": "ใช้ My name is ตามด้วยชื่อได้เลย",
+        "feedbackEn": "You can start with My name is, then your name.",
+        "hint": "ลองขึ้นต้นว่า My name is",
+        "hintEn": "Try starting with My name is"
+      },
+      {
+        "id": "interest",
+        "prompt": "บอกสิ่งที่ชอบหนึ่งอย่าง",
+        "promptEn": "Say one thing you like",
+        "example": "I like music.",
+        "feedback": "ถ้าเป็นกิจกรรม ใช้ I like singing. ได้ด้วย",
+        "feedbackEn": "For an activity, I like singing. works too.",
+        "hint": "ลองขึ้นต้นว่า I like",
+        "hintEn": "Try starting with I like"
+      },
+      {
+        "id": "question",
+        "prompt": "ถามชื่อครูกลับ",
+        "promptEn": "Ask the teacher’s name",
+        "example": "What is your name?",
+        "feedback": "เติมเครื่องหมายคำถามเมื่อเขียน",
+        "feedbackEn": "Add a question mark when you write it.",
+        "hint": "ลองถามว่า What is your name?",
+        "hintEn": "Try asking What is your name?"
+      }
+    ],
+    "assessment": {
+      "method": "rubric",
+      "criteria": [
+        { "id": "name", "max": 1, "rule": "Communicates own name understandably" },
+        { "id": "interest", "max": 1, "rule": "Communicates one preference understandably" },
+        { "id": "question", "max": 1, "rule": "Asks other person’s name understandably" }
+      ],
+      "passScore": 3
+    }
+  },
+  {
+    "id": "english-cafe-01",
+    "teacherId": "ray",
+    "version": 1,
+    "title": "สั่งเครื่องดื่มเป็นภาษาอังกฤษ",
+    "titleEn": "Order a drink in English",
+    "summary": "สั่งเครื่องดื่ม บอกขนาด และกล่าวขอบคุณ",
+    "summaryEn": "Order a drink, mention a size, and say thank you",
+    "level": "beginner",
+    "estimatedMinutes": 8,
+    "access": "paid",
+    "objectives": ["สั่งเครื่องดื่มได้", "บอกขนาดได้", "กล่าวขอบคุณได้"],
+    "objectivesEn": ["Order a drink", "Mention a size", "Say thank you"],
+    "concepts": ["I would like ...", "a small / medium / large", "Thank you"],
+    "conceptsEn": ["I would like ...", "a small / medium / large", "Thank you"],
+    "opening": "Hi! What would you like to drink?",
+    "practice": [
+      {
+        "id": "order",
+        "prompt": "สั่งเครื่องดื่มหนึ่งอย่างเป็นภาษาอังกฤษ",
+        "promptEn": "Order one drink in English",
+        "example": "I would like tea.",
+        "feedback": "ขึ้นต้นด้วย I would like แล้วตามด้วยเครื่องดื่ม",
+        "feedbackEn": "Start with I would like, then the drink.",
+        "hint": "ลองขึ้นต้นว่า I would like",
+        "hintEn": "Try starting with I would like"
+      },
+      {
+        "id": "size",
+        "prompt": "บอกขนาด small, medium หรือ large",
+        "promptEn": "Mention small, medium, or large",
+        "example": "A small tea, please.",
+        "feedback": "ใส่ขนาดไว้หน้าชื่อเครื่องดื่มได้",
+        "feedbackEn": "You can put the size before the drink.",
+        "hint": "ใช้คำว่า small, medium หรือ large",
+        "hintEn": "Use small, medium, or large"
+      },
+      {
+        "id": "thanks",
+        "prompt": "กล่าวขอบคุณบาริสต้า",
+        "promptEn": "Thank the barista",
+        "example": "Thank you.",
+        "feedback": "Thank you. สั้นและชัดพอแล้ว",
+        "feedbackEn": "Thank you. is short and clear.",
+        "hint": "ลองเขียนว่า Thank you",
+        "hintEn": "Try writing Thank you"
+      }
+    ],
+    "assessment": {
+      "method": "rubric",
+      "criteria": [
+        { "id": "order", "max": 1, "rule": "Orders a drink understandably" },
+        { "id": "size", "max": 1, "rule": "Mentions a size" },
+        { "id": "thanks", "max": 1, "rule": "Thanks the other person" }
+      ],
+      "passScore": 3
+    }
+  },
+  {
+    "id": "math-percent-01",
+    "teacherId": "pi",
+    "version": 1,
+    "title": "เปอร์เซ็นต์และส่วนลด",
+    "titleEn": "Percent and discounts",
+    "summary": "หาเปอร์เซ็นต์ของจำนวน และแยกราคาที่ต้องจ่ายออกจากส่วนลด",
+    "summaryEn": "Find a percent of a number, and separate the discount from the price you pay",
+    "level": "beginner",
+    "estimatedMinutes": 5,
+    "access": "free",
+    "objectives": ["หาเปอร์เซ็นต์ของจำนวน", "หาจำนวนส่วนลด", "หาราคาหลังลด"],
+    "objectivesEn": ["Find a percent of a number", "Find the discount amount", "Find the price after a discount"],
+    "concepts": ["เปอร์เซ็นต์หมายถึงต่อร้อย", "ส่วนลด = ราคาเดิม × เปอร์เซ็นต์ ÷ 100", "ราคาหลังลด = ราคาเดิม − ส่วนลด"],
+    "conceptsEn": ["Percent means per hundred", "Discount = original price × percent ÷ 100", "Price you pay = original price − discount"],
+    "workedExample": {
+      "question": "เสื้อ 500 บาท ลด 20% จ่ายเท่าไร?",
+      "questionEn": "A shirt costs 500 baht with 20% off. What do you pay?",
+      "steps": ["500 × 20 ÷ 100 = 100 บาท ส่วนลด", "500 − 100 = 400 บาท ราคาที่ต้องจ่าย"],
+      "stepsEn": ["500 × 20 ÷ 100 = 100 baht discount", "500 − 100 = 400 baht to pay"],
+      "answer": 400
+    },
+    "practice": [
+      {
+        "id": "p1",
+        "prompt": "10% ของ 300 เท่ากับเท่าไร?",
+        "promptEn": "What is 10% of 300?",
+        "answer": 30,
+        "unit": "บาท",
+        "hint": "300 ÷ 10",
+        "hintEn": "300 ÷ 10"
+      },
+      {
+        "id": "p2",
+        "prompt": "สินค้า 800 บาท ลด 25% ส่วนลดกี่บาท?",
+        "promptEn": "An item costs 800 baht with 25% off. How many baht is the discount?",
+        "answer": 200,
+        "unit": "บาท",
+        "hint": "25% เท่ากับหนึ่งในสี่",
+        "hintEn": "25% is one quarter"
+      },
+      {
+        "id": "p3",
+        "prompt": "สินค้า 800 บาท ลด 25% ต้องจ่ายกี่บาท?",
+        "promptEn": "An item costs 800 baht with 25% off. How many baht do you pay?",
+        "answer": 600,
+        "unit": "บาท",
+        "hint": "นำราคาเดิมลบส่วนลด",
+        "hintEn": "Subtract the discount from the original price"
+      }
+    ],
+    "assessment": {
+      "method": "numeric",
+      "passCorrect": 3,
+      "total": 3
+    }
+  },
+  {
+    "id": "math-discount-02",
+    "teacherId": "pi",
+    "version": 1,
+    "title": "ส่วนลดกับราคาที่ต้องจ่าย",
+    "titleEn": "Discount versus the price you pay",
+    "summary": "แยกตัวเลขส่วนลดออกจากจำนวนเงินที่ต้องจ่ายจริง",
+    "summaryEn": "Separate the discount amount from the money you actually pay",
+    "level": "beginner",
+    "estimatedMinutes": 8,
+    "access": "paid",
+    "objectives": ["หาเปอร์เซ็นต์ของจำนวนใหม่", "หาส่วนลดจากราคาที่กำหนด", "หาราคาหลังหักส่วนลด"],
+    "objectivesEn": ["Find a new percent of a number", "Find a discount from a given price", "Find the price after subtracting the discount"],
+    "concepts": ["หาส่วนลดก่อนเสมอ", "ส่วนลดไม่ใช่ราคาที่ต้องจ่าย", "ราคาที่ต้องจ่าย = ราคาเดิม − ส่วนลด"],
+    "conceptsEn": ["Find the discount first", "The discount is not the price you pay", "Price you pay = original price − discount"],
+    "workedExample": {
+      "question": "สมุด 200 บาท ลด 10% จ่ายเท่าไร?",
+      "questionEn": "A notebook costs 200 baht with 10% off. What do you pay?",
+      "steps": ["200 × 10 ÷ 100 = 20 บาท ส่วนลด", "200 − 20 = 180 บาท ราคาที่ต้องจ่าย"],
+      "stepsEn": ["200 × 10 ÷ 100 = 20 baht discount", "200 − 20 = 180 baht to pay"],
+      "answer": 180
+    },
+    "practice": [
+      {
+        "id": "d1",
+        "prompt": "15% ของ 200 เท่ากับเท่าไร?",
+        "promptEn": "What is 15% of 200?",
+        "answer": 30,
+        "unit": "บาท",
+        "hint": "200 × 15 ÷ 100",
+        "hintEn": "200 × 15 ÷ 100"
+      },
+      {
+        "id": "d2",
+        "prompt": "สินค้า 1,200 บาท ลด 25% ส่วนลดกี่บาท?",
+        "promptEn": "An item costs 1,200 baht with 25% off. How many baht is the discount?",
+        "answer": 300,
+        "unit": "บาท",
+        "hint": "25% คือหนึ่งในสี่ของ 1,200",
+        "hintEn": "25% is one quarter of 1,200"
+      },
+      {
+        "id": "d3",
+        "prompt": "สินค้า 1,200 บาท ลด 25% ต้องจ่ายกี่บาท?",
+        "promptEn": "An item costs 1,200 baht with 25% off. How many baht do you pay?",
+        "answer": 900,
+        "unit": "บาท",
+        "hint": "เอา 1,200 ตั้ง แล้วลบส่วนลด",
+        "hintEn": "Start from 1,200 and subtract the discount"
+      }
+    ],
+    "assessment": {
+      "method": "numeric",
+      "passCorrect": 3,
+      "total": 3
+    }
+  }
+]

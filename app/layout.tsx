@@ -1,0 +1,32 @@
+import type { Metadata } from "next";
+import { Noto_Sans_Thai } from "next/font/google";
+import { AppShell } from "@/components/app-shell";
+import { getViewer } from "@/lib/viewer";
+import "./globals.css";
+
+const noto = Noto_Sans_Thai({
+  subsets: ["thai", "latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-sans",
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: "Melearn Chat",
+    template: "%s · Melearn Chat",
+  },
+  description: "ครูที่มีคาแรกเตอร์ เรียนรู้ในแบบของคุณ · AI teachers for English and math, with Solana devnet unlocks.",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const viewer = await getViewer();
+  return (
+    <html lang={viewer.locale === "en" ? "en" : "th"}>
+      <body className={`${noto.variable} antialiased`}>
+        <AppShell locale={viewer.locale}>{children}</AppShell>
+      </body>
+    </html>
+  );
+}
