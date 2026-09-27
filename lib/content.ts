@@ -72,5 +72,5 @@ export function rpcUrl() {
 }
 
 export function tutorMode() {
-  return process.env.AI_API_KEY ? "model" : "lesson";
+  return process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY ? "model" : "lesson";
 }

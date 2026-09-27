@@ -130,7 +130,7 @@
   "profile.historyNote": "You can try a free lesson without connecting a wallet.",
   "profile.signInTitle": "Save learning across devices",
   "profile.tutorLesson": "Teacher replies come from that teacher's lesson and style on the server.",
-  "profile.tutorModel": "Open replies use an external model. Practice scores are still checked on the server.",
+  "profile.tutorModel": "Open replies use GPT-6 Luna through OpenRouter. Practice scores are still checked on the server.",
   "chats.title": "Chats",
   "chats.empty": "No chats yet. Choose a teacher and open a lesson.",
   "chats.open": "Open chat",

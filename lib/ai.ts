@@ -10,10 +10,10 @@ export async function modelReply(input: {
   history: Array<{ role: "user" | "assistant"; text: string }>;
   text: string;
 }) {
-  const key = process.env.AI_API_KEY;
+  const key = process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY;
   if (!key) return null;
-  const base = (process.env.AI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
-  const model = process.env.AI_MODEL || "gpt-4o-mini";
+  const base = (process.env.AI_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, "");
+  const model = process.env.AI_MODEL || "openai/gpt-6-luna";
   const lessonContext = {
     title: input.lesson.title,
     objectives: input.lesson.objectives,
@@ -34,13 +34,21 @@ export async function modelReply(input: {
       headers: {
         authorization: `Bearer ${key}`,
         "content-type": "application/json",
+        "http-referer": "http://127.0.0.1:43123",
+        "x-openrouter-title": "Melearn Chat",
       },
-      body: JSON.stringify({ model, messages, temperature: 0.4 }),
-      signal: AbortSignal.timeout(20000),
+      body: JSON.stringify({ model, messages, reasoning: { effort: "low" } }),
+      signal: AbortSignal.timeout(25000),
     });
-    if (!response.ok) return null;
-    const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const text = data.choices?.[0]?.message?.content?.trim();
+    if (!response.ok) {
+      console.error(`model reply failed: ${response.status}`);
+      return null;
+    }
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | Array<{ text?: string }> } }>;
+    };
+    const content = data.choices?.[0]?.message?.content;
+    const text = (typeof content === "string" ? content : content?.map((part) => part.text || "").join("") || "").trim();
     return text || null;
   } catch {
     return null;
