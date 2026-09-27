@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icon";
+import { UpgradeButton } from "@/components/upgrade-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import type { QuotaState } from "@/lib/quota";
 import { lessonObjectives, lessonTitle, practicePrompt, teacherImage } from "@/lib/content";
 import { t } from "@/lib/i18n";
 import type { ChatMode, Lesson, Locale, ProgressState, Teacher } from "@/lib/types";
@@ -26,6 +27,7 @@ export function ChatRoom({
   conversationId,
   initialMessages,
   initialProgress,
+  initialQuota,
   isGuest,
 }: {
   locale: Locale;
@@ -34,11 +36,12 @@ export function ChatRoom({
   conversationId: string;
   initialMessages: ChatMessage[];
   initialProgress: ProgressState;
+  initialQuota: QuotaState;
   isGuest: boolean;
 }) {
-  const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
   const [progress, setProgress] = useState(initialProgress);
+  const [quota, setQuota] = useState(initialQuota);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,18 +80,8 @@ export function ChatRoom({
     node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
   }, [draft]);
 
-  async function setLocale(next: Locale) {
-    if (next === locale) return;
-    await fetch("/api/preferences", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ locale: next }),
-    });
-    router.refresh();
-  }
-
   async function send(mode: ChatMode, text: string, clientMessageId?: string) {
-    if (sending) return;
+    if (sending || quota.blocked) return;
     if (mode === "teach" && !text.trim()) return;
     if (text.length > 2000) {
       setError(t(locale, "chat.limit"));
@@ -104,7 +97,8 @@ export function ChatRoom({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ clientMessageId: id, text, mode }),
       });
-      const data = (await response.json()) as { message?: string; messages?: ChatMessage[]; progress?: ProgressState };
+      const data = (await response.json()) as { message?: string; messages?: ChatMessage[]; progress?: ProgressState; quota?: QuotaState };
+      if (data.quota) setQuota(data.quota);
       if (!response.ok || !data.messages || !data.progress) {
         setRetry({ id, mode, text });
         setError(data.message || t(locale, "chat.error"));
@@ -137,7 +131,7 @@ export function ChatRoom({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col bg-white">
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
       <header className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2 md:px-5">
         <Link href={`/teachers/${teacher.id}`} className="grid size-11 shrink-0 place-items-center rounded-full text-primary" aria-label={t(locale, "common.back")}>
           <Icon name="back" />
@@ -149,19 +143,12 @@ export function ChatRoom({
             {t(locale, "teacher.ai")} · {lessonTitle(lesson, locale)}
           </p>
         </div>
-        <div className="flex shrink-0 rounded-full bg-[#F4F8FF] p-1" role="group" aria-label={t(locale, "profile.locale")}>
-          {(["th", "en"] as const).map((item) => (
-            <button key={item} type="button" aria-pressed={locale === item} onClick={() => setLocale(item)} className={`min-h-11 rounded-full px-3 text-sm font-semibold ${locale === item ? "bg-primary text-white" : "text-muted-foreground"}`}>
-              {item === "th" ? "TH" : "EN"}
-            </button>
-          ))}
-        </div>
       </header>
 
       {isGuest ? (
-        <p className="shrink-0 bg-[#F4F8FF] px-4 py-2 text-center text-sm md:px-6">
+        <p className="shrink-0 bg-muted px-4 py-2 text-center text-sm md:px-6">
           {t(locale, "guest.banner")}{" "}
-          <Link href="/profile" className="font-semibold text-primary">
+          <Link href="/profile" className="inline-flex min-h-11 items-center font-semibold text-primary">
             {t(locale, "guest.signin")}
           </Link>
         </p>
@@ -189,7 +176,7 @@ export function ChatRoom({
               </article>
             ) : (
               <article key={message.id} className="flex justify-end">
-                <p className="max-w-[min(100%,32rem)] whitespace-pre-wrap rounded-[18px] bg-[#E7EDFF] px-4 py-2.5 text-[15px] leading-7 text-ink">
+                <p className="max-w-[min(100%,32rem)] whitespace-pre-wrap rounded-[18px] bg-secondary px-4 py-2.5 text-[15px] leading-7 text-secondary-foreground">
                   <span className="sr-only">{t(locale, "chat.you")}: </span>
                   {userText(message.text)}
                 </p>
@@ -213,7 +200,7 @@ export function ChatRoom({
         {sending ? t(locale, "chat.thinking") : lastAssistant}
       </div>
 
-      <div className="relative shrink-0 bg-white px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-1 md:px-4">
+      <div className="relative shrink-0 bg-background px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-1 md:px-4">
         {unseen ? (
           <div className="absolute inset-x-0 bottom-full z-10 flex justify-center pb-2">
             <button type="button" className="min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(54,85,214,0.28)]" onClick={() => end.current?.scrollIntoView({ block: "end" })}>
@@ -223,7 +210,7 @@ export function ChatRoom({
         ) : null}
         <div className="mx-auto w-full max-w-[760px]">
           {progress.status === "completed" ? (
-            <section className="mb-3 rounded-[20px] border border-border bg-[#F4F8FF] p-4">
+            <section className="mb-3 rounded-[20px] border border-border bg-muted p-4">
               <h2 className="text-[18px]">{t(locale, "lesson.complete")}</h2>
               <p className="mt-2 text-sm font-semibold">{t(locale, "chat.goals")}</p>
               <ul className="mt-1 grid gap-1 text-sm">
@@ -243,7 +230,7 @@ export function ChatRoom({
             </section>
           ) : null}
           {progress.phase === "awaiting" && current ? (
-            <section className="mb-3 rounded-[20px] border border-border bg-[#F4F8FF] px-4 py-3">
+            <section className="mb-3 rounded-[20px] border border-border bg-muted px-4 py-3">
               <p className="text-sm font-semibold text-primary">{t(locale, "chat.practiceCard")}</p>
               <p className="mt-1">{practicePrompt(current, locale)}</p>
             </section>
@@ -259,16 +246,22 @@ export function ChatRoom({
               ) : null}
             </p>
           ) : null}
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              {t(locale, "quota.left")} {quota.remaining}/{quota.limit} {t(locale, "quota.prompts")}
+            </p>
+            {quota.blocked ? <UpgradeButton locale={locale} className="min-h-11" /> : null}
+          </div>
           <div className="mb-2 flex flex-wrap gap-2">
             {chipModes.map(([mode, key, icon]) => (
-              <Button key={mode} type="button" variant="outline" disabled={sending} onClick={() => send(mode, "")} className="h-11 min-h-11 rounded-full border-border bg-white px-3 text-sm font-semibold text-primary">
+              <Button key={mode} type="button" variant="outline" disabled={sending || quota.blocked} onClick={() => send(mode, "")} className="h-11 min-h-11 rounded-full border-border bg-card px-3 text-sm font-semibold text-primary">
                 <Icon name={icon} className="size-4" />
                 {t(locale, key)}
               </Button>
             ))}
           </div>
           <form
-            className="overflow-hidden rounded-[24px] border border-border bg-white shadow-[0_8px_28px_rgba(54,85,214,0.08)] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25"
+            className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_8px_28px_rgba(54,85,214,0.08)] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25"
             onSubmit={(event) => {
               event.preventDefault();
               void send("teach", draft);
@@ -291,7 +284,7 @@ export function ChatRoom({
               <p className={`px-2 text-xs ${draft.length > 2000 ? "text-error" : "text-muted-foreground"} ${draft.length >= 1600 ? "" : "invisible"}`} aria-hidden={draft.length < 1600}>
                 {draft.length}/2000
               </p>
-              <Button type="submit" size="icon" disabled={sending || !draft.trim()} className="size-11 rounded-full" aria-label={t(locale, "chat.send")}>
+              <Button type="submit" size="icon" disabled={sending || quota.blocked || !draft.trim()} className="size-11 rounded-full disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100" aria-label={t(locale, "chat.send")}>
                 <Icon name="send" />
               </Button>
             </div>

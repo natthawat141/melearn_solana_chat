@@ -86,6 +86,13 @@ CREATE TABLE IF NOT EXISTS wallet_challenges (
   expires_at TEXT NOT NULL,
   used INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS quotas (
+  owner_type TEXT NOT NULL,
+  owner_id TEXT NOT NULL,
+  used INTEGER NOT NULL DEFAULT 0,
+  window_started_at TEXT NOT NULL,
+  PRIMARY KEY (owner_type, owner_id)
+);
 `;
 
 export type AppDatabase = DatabaseSync;

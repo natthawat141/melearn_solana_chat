@@ -31,6 +31,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     });
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof LearningError && error.code === "QUOTA" && error.resetAt) {
+      const when = new Date(error.resetAt).toLocaleString(viewer.locale === "en" ? "en-GB" : "th-TH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Bangkok" });
+      const message = viewer.locale === "en" ? `You have used 10 prompts. They reload on ${when}.` : `ใช้ครบ 10 ข้อความแล้ว จะใช้ได้อีกครั้ง ${when}`;
+      return NextResponse.json({ code: "QUOTA", message, retryable: false, resetAt: error.resetAt }, { status: 429 });
+    }
     if (error instanceof LearningError) return jsonError(viewer.locale, error.status, error.code, error.retryable);
     throw error;
   }

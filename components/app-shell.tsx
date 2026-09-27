@@ -3,22 +3,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Icon } from "@/components/icon";
+import { BookOpen, Home, MessageCircle, Sparkles, UserRound } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
 const items = [
-  { href: "/", label: "nav.home" as const, icon: "home", match: (path: string) => path === "/" || path.startsWith("/teachers") },
-  { href: "/chats", label: "nav.chat" as const, icon: "chat", match: (path: string) => path.startsWith("/chats") || path.startsWith("/learn") },
-  { href: "/learning", label: "nav.progress" as const, icon: "book", match: (path: string) => path.startsWith("/learning") },
-  { href: "/profile", label: "nav.profile" as const, icon: "user", match: (path: string) => path.startsWith("/profile") || path.startsWith("/unlock") },
+  { href: "/app", label: "nav.home" as const, icon: Home, match: (path: string) => path === "/app" || path.startsWith("/teachers") },
+  { href: "/chats", label: "nav.chat" as const, icon: MessageCircle, match: (path: string) => path.startsWith("/chats") || path.startsWith("/learn") },
+  { href: "/learning", label: "nav.progress" as const, icon: BookOpen, match: (path: string) => path.startsWith("/learning") },
+  { href: "/pricing", label: "pricing.title" as const, icon: Sparkles, match: (path: string) => path.startsWith("/pricing") },
+  { href: "/profile", label: "nav.profile" as const, icon: UserRound, match: (path: string) => path.startsWith("/profile") },
 ];
 
 export function AppShell({ locale, children }: { locale: Locale; children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const marketing = pathname === "/" ;
   const chat = pathname.startsWith("/learn");
-  const focus = chat || pathname.startsWith("/unlock");
 
   async function setLocale(next: Locale) {
     await fetch("/api/preferences", {
@@ -29,63 +33,59 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
     router.refresh();
   }
 
+  if (marketing) return <div className="min-h-dvh bg-background text-foreground">{children}</div>;
+
   return (
-    <div className={`${chat ? "h-dvh overflow-hidden" : "min-h-dvh"} md:grid md:grid-cols-[220px_minmax(0,1fr)]`}>
-      <aside className="hidden border-r border-border bg-surface md:flex md:flex-col md:px-4 md:py-6">
-        <Link href="/" className="flex items-center gap-3 rounded-[14px]">
-          <Image src="/brand/logo.png" alt="Melearn Chat" width={48} height={48} className="size-12 object-contain" />
-          <span className="font-semibold">Melearn Chat</span>
-        </Link>
-        <nav className="mt-8 grid gap-2" aria-label="Main">
-          {items.map((item) => {
-            const active = item.match(pathname);
-            return (
-              <Link key={item.href} href={item.href} className={`flex min-h-12 items-center gap-3 rounded-[14px] px-3 font-semibold ${active ? "bg-[#E7EDFF] text-primary" : "text-ink"}`} aria-current={active ? "page" : undefined}>
-                <Icon name={item.icon} />
-                {t(locale, item.label)}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
-      <div className={`min-w-0 ${chat ? "flex h-full min-h-0 flex-col bg-white" : ""}`}>
-        <header className={`${chat ? "hidden" : "flex"} items-center justify-between gap-3 px-5 py-4`}>
-          <Link href="/" className="flex items-center gap-2 md:hidden">
-            <Image src="/brand/logo.png" alt="Melearn Chat" width={40} height={40} className="size-10 object-contain" />
-            <span className="font-semibold">Melearn</span>
+    <SidebarProvider className={chat ? "h-dvh overflow-hidden" : "min-h-dvh"}>
+      <Sidebar collapsible="offcanvas">
+        <SidebarHeader>
+          <Link href="/app" className="flex items-center gap-2 px-2 py-1">
+            <Image src="/brand/logo.png" alt="Melearn Chat" width={36} height={36} className="size-9 object-contain" />
+            <span className="font-semibold">Melearn Chat</span>
           </Link>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map((item) => {
+                  const active = item.match(pathname);
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={active} className="min-h-11">
+                        <Link href={item.href} aria-current={active ? "page" : undefined}>
+                          <Icon />
+                          <span>{t(locale, item.label)}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <p className="px-2 text-xs text-muted-foreground">{t(locale, "landing.freeNote")}</p>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset className={chat ? "flex h-dvh min-h-0 flex-col overflow-hidden bg-background" : "bg-background"}>
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
+          <SidebarTrigger className="size-11" />
           <div className="ml-auto flex items-center gap-2">
-            <div className="flex rounded-full bg-surface p-1" role="group" aria-label={t(locale, "profile.locale")}>
+            <div className="flex rounded-full bg-muted p-1" role="group" aria-label={t(locale, "profile.locale")}>
               {(["th", "en"] as const).map((item) => (
-                <button key={item} type="button" aria-pressed={locale === item} onClick={() => setLocale(item)} className={`min-h-11 rounded-full px-3 text-sm font-semibold ${locale === item ? "bg-primary text-white" : "text-muted-foreground"}`}>
+                <Button key={item} type="button" size="sm" variant={locale === item ? "default" : "ghost"} aria-pressed={locale === item} onClick={() => setLocale(item)} className="min-h-11 rounded-full px-3">
                   {item === "th" ? "TH" : "EN"}
-                </button>
+                </Button>
               ))}
             </div>
-            <Link href="/profile" className="grid size-11 place-items-center rounded-full bg-surface text-primary" aria-label={t(locale, "nav.profile")}>
-              <Icon name="user" />
-            </Link>
+            <ThemeToggle label={locale === "en" ? "Theme" : "ธีม"} />
           </div>
         </header>
-        <main id="main" className={chat ? "flex min-h-0 flex-1 flex-col overflow-hidden" : focus ? "pb-6" : "pb-28 md:pb-10"}>
-          {children}
-        </main>
-        <nav className={`${focus ? "hidden" : "fixed"} inset-x-0 bottom-0 z-30 border-t border-border bg-surface px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1 md:hidden`} aria-label="Main">
-          <ul className="grid grid-cols-4">
-            {items.map((item) => {
-              const active = item.match(pathname);
-              return (
-                <li key={item.href}>
-                  <Link href={item.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${active ? "text-primary" : "text-muted-foreground"}`} aria-current={active ? "page" : undefined}>
-                    <Icon name={item.icon} />
-                    {t(locale, item.label)}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-      </div>
-    </div>
+        <div className={chat ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex-1 pb-8"}>{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

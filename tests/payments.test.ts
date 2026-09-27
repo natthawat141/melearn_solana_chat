@@ -76,9 +76,8 @@ test("cancel and chat text do not grant access, and confirm is idempotent", asyn
     level: "beginner",
   });
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM entitlements").get()?.n, 0);
-  await assert.rejects(() =>
-    Promise.resolve().then(() => openConversation(db, { ownerType: "guest", ownerId: "guest-1", lessonId: "english-cafe-01", locale: "th" })),
-  );
+  const paid = openConversation(db, { ownerType: "guest", ownerId: "guest-1", lessonId: "english-cafe-01", locale: "th" });
+  assert.equal(paid.lesson.id, "english-cafe-01");
 
   const again = createPurchase(db, userId, "english-cafe-01");
   const payer = "11111111111111111111111111111111";

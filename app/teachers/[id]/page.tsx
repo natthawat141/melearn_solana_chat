@@ -3,12 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
 import { Card, Pill } from "@/components/melearn-ui";
-import { getTeacher, lessonObjectives, lessonSummary, lessonTitle, lessonsForTeacher, priceLamports, teacherImage, teacherPersona } from "@/lib/content";
-import { formatSol } from "@/lib/format";
+import { getTeacher, lessonObjectives, lessonSummary, lessonTitle, lessonsForTeacher, teacherImage, teacherPersona } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { t } from "@/lib/i18n";
 import { listLearning } from "@/lib/learning";
-import { getViewer, lessonUnlocked } from "@/lib/viewer";
+import { getViewer } from "@/lib/viewer";
 
 export default async function TeacherPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,7 +20,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="mx-auto w-full max-w-[860px] px-5">
-      <Link href="/" className="inline-flex min-h-11 items-center gap-2 font-semibold text-primary">
+      <Link href="/app" className="inline-flex min-h-11 items-center gap-2 font-semibold text-primary">
         <Icon name="back" className="size-4" />
         {t(viewer.locale, "common.back")}
       </Link>
@@ -44,28 +43,22 @@ export default async function TeacherPage({ params }: { params: Promise<{ id: st
       </div>
       <div className="mt-4 grid gap-3">
         {lessons.map((lesson) => {
-          const unlocked = lessonUnlocked(viewer.user?.id ?? null, lesson.id, lesson.access);
           const status = progress.get(lesson.id);
-          const href = unlocked && teacher.mvpEnabled ? `/learn/${lesson.id}` : `/unlock/${lesson.id}`;
+          const href = `/learn/${lesson.id}`;
           const label = !teacher.mvpEnabled
             ? t(viewer.locale, "teacher.soon")
-            : !unlocked
-              ? t(viewer.locale, "teacher.unlock")
-              : status === "completed"
-                ? t(viewer.locale, "teacher.review")
-                : status
-                  ? t(viewer.locale, "teacher.continue")
-                  : t(viewer.locale, "teacher.start");
-          const price = priceLamports(lesson.id);
+            : status === "completed"
+              ? t(viewer.locale, "teacher.review")
+              : status
+                ? t(viewer.locale, "teacher.continue")
+                : t(viewer.locale, "teacher.start");
           return (
             <Card key={lesson.id}>
               <div className="flex items-start justify-between gap-3">
                 <h2 className="text-[18px]">{lessonTitle(lesson, viewer.locale)}</h2>
-                {lesson.access === "paid" && !unlocked ? <Icon name="lock" /> : null}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {t(viewer.locale, "lesson.level.beginner")} · {lesson.estimatedMinutes} {t(viewer.locale, "lesson.minutes")} · {lesson.access === "free" ? t(viewer.locale, "lesson.free") : t(viewer.locale, "lesson.paid")}
-                {price ? ` · ${formatSol(price)} SOL` : ""}
+                {t(viewer.locale, "lesson.level.beginner")} · {lesson.estimatedMinutes} {t(viewer.locale, "lesson.minutes")} · {lesson.access === "free" ? t(viewer.locale, "lesson.free") : t(viewer.locale, "lesson.freeDemo")}
               </p>
               <p className="mt-2">{lessonSummary(lesson, viewer.locale)}</p>
               <p className="mt-3 text-sm font-semibold">{t(viewer.locale, "lesson.objectives")}</p>

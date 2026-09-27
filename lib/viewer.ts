@@ -2,7 +2,6 @@ import crypto from "crypto";
 import { cookies, headers } from "next/headers";
 import { findUser, readSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { hasEntitlement } from "@/lib/learning";
 import { nowIso } from "@/lib/format";
 import type { Account } from "@/lib/auth";
 import type { Locale } from "@/lib/types";
@@ -67,7 +66,6 @@ export async function getViewer(): Promise<Viewer> {
 }
 
 export function lessonUnlocked(userId: string | null, lessonId: string, access: "free" | "paid") {
-  if (access === "free") return true;
-  if (!userId) return false;
-  return hasEntitlement(getDb(), userId, lessonId);
+  // Demo keeps every lesson open. Checkout is not wired, so paid does not lock.
+  return access === "free" || access === "paid" || Boolean(userId && lessonId);
 }

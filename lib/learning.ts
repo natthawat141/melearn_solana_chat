@@ -4,6 +4,7 @@ import type { AppDatabase } from "@/lib/db";
 import { withTransaction } from "@/lib/db";
 import { getLesson, getTeacher } from "@/lib/content";
 import { nowIso } from "@/lib/format";
+import { consumePrompt, readQuota } from "@/lib/quota";
 import { emptyProgress, openingMessage, respond } from "@/lib/tutor";
 import type { ChatMode, Locale, OwnerType, ProgressState } from "@/lib/types";
 
@@ -12,11 +13,14 @@ export class LearningError extends Error {
   status: number;
   retryable: boolean;
 
-  constructor(code: string, status: number, retryable = false) {
+  resetAt?: string;
+
+  constructor(code: string, status: number, retryable = false, resetAt?: string) {
     super(code);
     this.code = code;
     this.status = status;
     this.retryable = retryable;
+    this.resetAt = resetAt;
   }
 }
 
@@ -63,11 +67,6 @@ export function canEnterLesson(db: AppDatabase, ownerType: OwnerType, ownerId: s
   const teacher = lesson ? getTeacher(lesson.teacherId) : null;
   if (!lesson || !teacher) throw new LearningError("NOT_FOUND", 404);
   if (!teacher.mvpEnabled) throw new LearningError("TEACHER_UNAVAILABLE", 403);
-  if (lesson.access === "paid") {
-    if (ownerType !== "user" || !hasEntitlement(db, ownerId, lesson.id)) {
-      throw new LearningError("ENTITLEMENT_REQUIRED", 403);
-    }
-  }
   return { lesson, teacher };
 }
 
@@ -184,7 +183,11 @@ export async function handleMessage(
     .get(conversation.id, input.clientMessageId) as MessageRow | undefined;
   if (existingUser && existingAssistant) {
     const progress = readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length) ?? emptyProgress(lesson.practice.length);
-    return { messages: listMessages(db, conversation.id), progress, assessment: null, idempotent: true };
+    return { messages: listMessages(db, conversation.id), progress, assessment: null, idempotent: true, quota: readQuota(db, input.ownerType, input.ownerId) };
+  }
+  if (!existingUser) {
+    const gate = readQuota(db, input.ownerType, input.ownerId);
+    if (gate.blocked) throw new LearningError("QUOTA", 429, false, gate.resetAt);
   }
 
   const prior = listMessages(db, conversation.id);
@@ -230,6 +233,7 @@ export async function handleMessage(
         input.mode,
         userAt,
       );
+      consumePrompt(db, input.ownerType, input.ownerId, createdAt.getTime());
     }
     db.prepare("INSERT INTO messages (id, conversation_id, role, text, client_message_id, mode, created_at) VALUES (?, ?, 'assistant', ?, ?, ?, ?)").run(
       crypto.randomUUID(),
@@ -248,6 +252,7 @@ export async function handleMessage(
     progress: nextProgress,
     assessment,
     idempotent: false,
+    quota: readQuota(db, input.ownerType, input.ownerId),
   };
 }
 

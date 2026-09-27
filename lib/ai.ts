@@ -13,7 +13,7 @@ export async function modelReply(input: {
   const key = process.env.AI_API_KEY || process.env.OPENROUTER_API_KEY;
   if (!key) return null;
   const base = (process.env.AI_BASE_URL || "https://openrouter.ai/api/v1").replace(/\/$/, "");
-  const model = process.env.AI_MODEL || "openai/gpt-6-luna";
+  const model = process.env.AI_MODEL || "openai/gpt-6-luna-pro";
   const lessonContext = {
     title: input.lesson.title,
     objectives: input.lesson.objectives,

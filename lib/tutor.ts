@@ -94,7 +94,7 @@ function gradeItem(lesson: Lesson, item: PracticeItem, answer: string) {
 export function openingMessage(teacher: Teacher, lesson: Lesson, locale: Locale) {
   if (teacher.id === "pi") {
     return locale === "en"
-      ? "Hi, I'm Teacher Pi. Shall we solve one problem together, step by step? Tell me where you get stuck."
+      ? `Hi, I'm Teacher Pi. Shall we work through ${lesson.titleEn} together, step by step? Tell me where you get stuck.`
       : `${teacher.greeting}\n\nวันนี้เราจะค่อย ๆ ดู${lesson.title} ถ้าติดขั้นตอนไหน บอกได้เลยนะ`;
   }
   if (teacher.id === "ray") {
@@ -103,6 +103,13 @@ export function openingMessage(teacher: Teacher, lesson: Lesson, locale: Locale)
       : `${teacher.greeting}\n\n${lesson.opening || "ลองทักทายเป็นภาษาอังกฤษได้เลยครับ"}`.trim();
   }
   return locale === "en" ? teacher.exampleResponse : teacher.greeting;
+}
+
+export function localizedHistoryText(teacher: Teacher, lesson: Lesson, text: string, locale: Locale) {
+  const thai = openingMessage(teacher, lesson, "th");
+  const english = openingMessage(teacher, lesson, "en");
+  if (text === thai || text === english) return openingMessage(teacher, lesson, locale);
+  return text;
 }
 
 function workedExampleText(lesson: Lesson, locale: Locale) {

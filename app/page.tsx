@@ -1,99 +1,63 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Onboarding } from "@/components/onboarding";
-import { Card, Pill } from "@/components/melearn-ui";
-import { getLesson, lessonTitle, teacherImage, teacherPersona, teachers } from "@/lib/content";
-import { getDb } from "@/lib/db";
-import { formatWhen } from "@/lib/format";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { teachers, teacherPersona } from "@/lib/content";
 import { t } from "@/lib/i18n";
-import { listLearning } from "@/lib/learning";
 import { getViewer } from "@/lib/viewer";
 
-export default async function HomePage() {
+export default async function LandingPage() {
   const viewer = await getViewer();
-  const rows = listLearning(getDb(), viewer.ownerType, viewer.ownerId);
-  const latest = rows[0];
-  const lesson = latest ? getLesson(latest.lesson_id) : null;
-  const teacher = lesson ? teachers.find((item) => item.id === lesson.teacherId) : null;
-
+  const locale = viewer.locale;
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-5">
-      <div className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute -right-8 -top-10 size-36 rounded-full bg-cyan/30" />
-        <p className="text-sm font-semibold text-primary">{t(viewer.locale, "landing.kicker")}</p>
-        <h1 className="mt-2 max-w-xl">{t(viewer.locale, "home.title")}</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">{t(viewer.locale, "landing.subtitle")}</p>
-      </div>
-      {!viewer.onboarded ? (
-        <div className="mt-6">
-          <Onboarding locale={viewer.locale} />
+    <div>
+      <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-3 px-4 py-4 sm:px-5">
+        <Link href="/" className="flex min-h-11 items-center gap-2">
+          <Image src="/brand/logo.png" alt="Melearn Chat" width={40} height={40} className="size-10 object-contain" />
+          <span className="font-semibold">Melearn Chat</span>
+        </Link>
+        <nav className="ml-auto flex items-center gap-2">
+          <Button asChild variant="ghost" className="hidden min-h-11 px-3 sm:inline-flex">
+            <Link href="/pricing">{t(locale, "landing.pricing")}</Link>
+          </Button>
+          <ThemeToggle label={locale === "en" ? "Theme" : "ธีม"} />
+          <Button asChild className="min-h-11 px-4">
+            <Link href="/learn/english-intro-01">{t(locale, "landing.try")}</Link>
+          </Button>
+        </nav>
+      </header>
+      <main className="mx-auto grid w-full max-w-6xl gap-10 px-5 pb-16 pt-8 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+        <div>
+          <Badge variant="secondary">{t(locale, "landing.kicker")}</Badge>
+          <h1 className="mt-4 max-w-xl text-4xl">{t(locale, "landing.hero")}</h1>
+          <p className="mt-4 max-w-xl text-muted-foreground">{t(locale, "landing.subtitle")}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="min-h-12 px-5 text-base">
+              <Link href="/learn/english-intro-01">{t(locale, "landing.try")}</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="min-h-12 px-5 text-base">
+              <Link href="/pricing">{t(locale, "landing.pricing")}</Link>
+            </Button>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">{t(locale, "landing.freeNote")}</p>
         </div>
-      ) : null}
-      {latest && lesson && teacher ? (
-        <Card className="mt-6">
-          <p className="text-sm text-muted-foreground">{t(viewer.locale, "continue.with")} {teacher.name[viewer.locale]}</p>
-          <h2 className="mt-1 text-[20px]">{lessonTitle(lesson, viewer.locale)}</h2>
-          <p className="text-sm text-muted-foreground">
-            {teacher.subject[viewer.locale]} · {formatWhen(latest.updated_at, viewer.locale)}
-          </p>
-          <Link href={`/learn/${lesson.id}`} className="mt-3 inline-flex min-h-12 items-center justify-center rounded-[14px] bg-primary px-4 font-semibold text-white">
-            {latest.status === "completed" ? t(viewer.locale, "teacher.review") : t(viewer.locale, "home.continue")}
-          </Link>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t(locale, "home.teachers")}</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {teachers.filter((teacher) => teacher.mvpEnabled).map((teacher) => (
+              <div key={teacher.id} className="rounded-xl border border-border p-3">
+                <p className="font-semibold">{teacher.name[locale]}</p>
+                <p className="text-sm text-muted-foreground">{teacher.subject[locale]}</p>
+                <p className="mt-1 text-sm">{teacherPersona(teacher, locale)}</p>
+              </div>
+            ))}
+          </CardContent>
         </Card>
-      ) : null}
-      <section className="mt-8">
-        <h2>{t(viewer.locale, "landing.stepsTitle")}</h2>
-        <ol className="mt-3 grid gap-3 md:grid-cols-2">
-          {(["landing.step1", "landing.step2", "landing.step3", "landing.step4"] as const).map((key, index) => (
-            <li key={key} className="rounded-[20px] border border-border bg-surface p-4">
-              <span className="text-sm font-semibold text-primary">0{index + 1}</span>
-              <p className="mt-1 font-semibold">{t(viewer.locale, key)}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-      <section className="mt-8">
-        <h2>{t(viewer.locale, "home.teachers")}</h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-3">
-          {teachers.map((item) => {
-            const image = teacherImage(item);
-            const body = (
-              <>
-                {image ? (
-                  <div className="relative aspect-square w-full" style={{ background: item.accentBackground }}>
-                    <Image src={image} alt={item.name[viewer.locale]} fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" style={{ objectPosition: "50% 20%" }} />
-                  </div>
-                ) : (
-                  <div className="grid aspect-square w-full place-items-center text-5xl font-semibold" style={{ background: item.accentBackground }} aria-hidden>
-                    {item.name.en.replace("Teacher ", "").slice(0, 1)}
-                  </div>
-                )}
-                <div className="p-3">
-                  <p className="font-semibold">{item.name[viewer.locale]}</p>
-                  <p className="text-sm text-muted-foreground">{item.subject[viewer.locale]}</p>
-                  <p className="mt-2 line-clamp-2 text-sm">{teacherPersona(item, viewer.locale)}</p>
-                  <div className="mt-3">
-                    <Pill tone={item.mvpEnabled ? "blue" : "muted"}>{item.mvpEnabled ? t(viewer.locale, "teacher.start") : t(viewer.locale, "teacher.soon")}</Pill>
-                  </div>
-                </div>
-              </>
-            );
-            if (!item.mvpEnabled) {
-              return (
-                <div key={item.id} role="group" aria-disabled="true" className="overflow-hidden rounded-[20px] border border-border bg-surface opacity-80">
-                  {body}
-                </div>
-              );
-            }
-            return (
-              <Link key={item.id} href={`/teachers/${item.id}`} className="overflow-hidden rounded-[20px] border border-border bg-surface">
-                {body}
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-      <p className="mt-8 text-sm text-muted-foreground">{t(viewer.locale, "landing.demoNote")}</p>
+      </main>
     </div>
   );
 }

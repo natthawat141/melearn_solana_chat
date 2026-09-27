@@ -114,6 +114,11 @@ export function migrateGuest(db: AppDatabase, guestId: string, userId: string) {
       db.prepare("UPDATE conversations SET owner_type = 'user', owner_id = ? WHERE id = ?").run(userId, row.id);
     }
   }
+  const guestQuota = db.prepare("SELECT used, window_started_at FROM quotas WHERE owner_type = 'guest' AND owner_id = ?").get(guestId);
+  const userQuota = db.prepare("SELECT owner_id FROM quotas WHERE owner_type = 'user' AND owner_id = ?").get(userId);
+  if (guestQuota && !userQuota) {
+    db.prepare("UPDATE quotas SET owner_type = 'user', owner_id = ? WHERE owner_type = 'guest' AND owner_id = ?").run(userId, guestId);
+  }
 }
 
 export function registerUser(db: AppDatabase, input: { displayName: string; password: string; guestId: string; locale: Locale; level: string | null; goal: string | null; onboarded: boolean }) {
