@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/icon";
-import { Card, Pill } from "@/components/ui";
+import { Card, Pill } from "@/components/melearn-ui";
 import { getTeacher, lessonObjectives, lessonSummary, lessonTitle, lessonsForTeacher, priceLamports, teacherImage, teacherPersona } from "@/lib/content";
 import { formatSol } from "@/lib/format";
 import { getDb } from "@/lib/db";
@@ -38,7 +38,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ id: st
         <div className="p-4">
           <Pill>{t(viewer.locale, "teacher.ai")} · {teacher.subject[viewer.locale]}</Pill>
           <h1 className="mt-3">{teacher.name[viewer.locale]}</h1>
-          <p className="mt-2 text-muted">{teacherPersona(teacher, viewer.locale)}</p>
+          <p className="mt-2 text-muted-foreground">{teacherPersona(teacher, viewer.locale)}</p>
           {!teacher.mvpEnabled ? <p className="mt-3 font-semibold">{t(viewer.locale, "teacher.disabledBody")}</p> : null}
         </div>
       </div>
@@ -63,7 +63,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ id: st
                 <h2 className="text-[18px]">{lessonTitle(lesson, viewer.locale)}</h2>
                 {lesson.access === "paid" && !unlocked ? <Icon name="lock" /> : null}
               </div>
-              <p className="mt-1 text-sm text-muted">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {t(viewer.locale, "lesson.level.beginner")} · {lesson.estimatedMinutes} {t(viewer.locale, "lesson.minutes")} · {lesson.access === "free" ? t(viewer.locale, "lesson.free") : t(viewer.locale, "lesson.paid")}
                 {price ? ` · ${formatSol(price)} SOL` : ""}
               </p>
@@ -79,7 +79,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ id: st
                   {label}
                 </Link>
               ) : (
-                <p className="mt-4 inline-flex min-h-12 items-center rounded-[14px] bg-border px-4 font-semibold text-muted">{label}</p>
+                <p className="mt-4 inline-flex min-h-12 items-center rounded-[14px] bg-border px-4 font-semibold text-muted-foreground">{label}</p>
               )}
             </Card>
           );

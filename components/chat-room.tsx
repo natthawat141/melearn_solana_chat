@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icon";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { lessonObjectives, lessonTitle, practicePrompt, teacherImage } from "@/lib/content";
 import { t } from "@/lib/i18n";
 import type { ChatMode, Lesson, Locale, ProgressState, Teacher } from "@/lib/types";
@@ -143,13 +145,13 @@ export function ChatRoom({
         <Face teacher={teacher} size={40} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold leading-tight">{teacher.name[locale]}</p>
-          <p className="truncate text-sm text-muted">
+          <p className="truncate text-sm text-muted-foreground">
             {t(locale, "teacher.ai")} · {lessonTitle(lesson, locale)}
           </p>
         </div>
         <div className="flex shrink-0 rounded-full bg-[#F4F8FF] p-1" role="group" aria-label={t(locale, "profile.locale")}>
           {(["th", "en"] as const).map((item) => (
-            <button key={item} type="button" aria-pressed={locale === item} onClick={() => setLocale(item)} className={`min-h-11 rounded-full px-3 text-sm font-semibold ${locale === item ? "bg-primary text-white" : "text-muted"}`}>
+            <button key={item} type="button" aria-pressed={locale === item} onClick={() => setLocale(item)} className={`min-h-11 rounded-full px-3 text-sm font-semibold ${locale === item ? "bg-primary text-white" : "text-muted-foreground"}`}>
               {item === "th" ? "TH" : "EN"}
             </button>
           ))}
@@ -199,7 +201,7 @@ export function ChatRoom({
               <Face teacher={teacher} size={32} />
               <div className="min-w-0 flex-1 pt-0.5">
                 <p className="text-sm font-semibold leading-none">{teacher.name[locale]}</p>
-                <p className="mt-2 text-sm text-muted">{t(locale, "chat.thinking")}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{t(locale, "chat.thinking")}</p>
               </div>
             </article>
           ) : null}
@@ -232,7 +234,7 @@ export function ChatRoom({
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-sm text-muted">
+              <p className="mt-2 text-sm text-muted-foreground">
                 {t(locale, "chat.attempts")}: {progress.attempts} · {t(locale, "chat.hints")}: {progress.hintsUsed}
               </p>
               <Link href="/learning" className="mt-3 inline-flex min-h-12 items-center font-semibold text-primary">
@@ -246,7 +248,7 @@ export function ChatRoom({
               <p className="mt-1">{practicePrompt(current, locale)}</p>
             </section>
           ) : null}
-          {offline ? <p className="mb-2 text-sm text-muted">{t(locale, "chat.offline")}</p> : null}
+          {offline ? <p className="mb-2 text-sm text-muted-foreground">{t(locale, "chat.offline")}</p> : null}
           {error ? (
             <p className="mb-2 text-sm text-error">
               {error}{" "}
@@ -259,14 +261,14 @@ export function ChatRoom({
           ) : null}
           <div className="mb-2 flex flex-wrap gap-2">
             {chipModes.map(([mode, key, icon]) => (
-              <button key={mode} type="button" disabled={sending} onClick={() => send(mode, "")} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-white px-3 text-sm font-semibold text-primary disabled:opacity-60">
+              <Button key={mode} type="button" variant="outline" disabled={sending} onClick={() => send(mode, "")} className="h-11 min-h-11 rounded-full border-border bg-white px-3 text-sm font-semibold text-primary">
                 <Icon name={icon} className="size-4" />
                 {t(locale, key)}
-              </button>
+              </Button>
             ))}
           </div>
           <form
-            className="rounded-[24px] border border-border bg-white shadow-[0_8px_28px_rgba(54,85,214,0.08)]"
+            className="overflow-hidden rounded-[24px] border border-border bg-white shadow-[0_8px_28px_rgba(54,85,214,0.08)] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25"
             onSubmit={(event) => {
               event.preventDefault();
               void send("teach", draft);
@@ -274,7 +276,7 @@ export function ChatRoom({
           >
             <label className="block">
               <span className="sr-only">{t(locale, "chat.placeholder")}</span>
-              <textarea
+              <Textarea
                 ref={field}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -282,19 +284,19 @@ export function ChatRoom({
                 placeholder={t(locale, "chat.placeholder")}
                 rows={1}
                 maxLength={4000}
-                className="max-h-40 min-h-12 w-full resize-none bg-transparent px-4 pt-3.5 text-[15px] leading-6 outline-none"
+                className="max-h-40 min-h-12 w-full resize-none rounded-none border-0 bg-transparent px-4 pt-3.5 text-[15px] leading-6 shadow-none [field-sizing:fixed] focus-visible:border-transparent focus-visible:ring-0 md:text-[15px]"
               />
             </label>
             <div className="flex items-center justify-between gap-3 px-2 pb-2">
-              <p className={`px-2 text-xs ${draft.length > 2000 ? "text-error" : "text-muted"} ${draft.length >= 1600 ? "" : "invisible"}`} aria-hidden={draft.length < 1600}>
+              <p className={`px-2 text-xs ${draft.length > 2000 ? "text-error" : "text-muted-foreground"} ${draft.length >= 1600 ? "" : "invisible"}`} aria-hidden={draft.length < 1600}>
                 {draft.length}/2000
               </p>
-              <button type="submit" disabled={sending || !draft.trim()} className="grid size-11 place-items-center rounded-full bg-primary text-white disabled:bg-border disabled:text-muted" aria-label={t(locale, "chat.send")}>
+              <Button type="submit" size="icon" disabled={sending || !draft.trim()} className="size-11 rounded-full" aria-label={t(locale, "chat.send")}>
                 <Icon name="send" />
-              </button>
+              </Button>
             </div>
           </form>
-          <p className="px-2 pt-2 text-center text-xs text-muted">{t(locale, "chat.aiNotice")}</p>
+          <p className="px-2 pt-2 text-center text-xs text-muted-foreground">{t(locale, "chat.aiNotice")}</p>
         </div>
       </div>
     </div>

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Keypair } from "@solana/web3.js";
 import { hashPassword } from "../lib/auth.ts";
 import { openDatabase } from "../lib/db.ts";
 import { handleMessage, openConversation } from "../lib/learning.ts";
@@ -40,14 +39,15 @@ test("accepts a matching devnet transfer and rejects mismatches", () => {
 });
 
 test("server transaction encodes the quoted lamports and purchase memo", () => {
-  const payer = Keypair.generate().publicKey.toBase58();
-  const recipient = Keypair.generate().publicKey.toBase58();
-  const blockhash = Keypair.generate().publicKey.toBase58();
-  const built = buildUnsignedTransfer({ payer, recipient, lamports: 10_000_000, purchaseId: "purchase-1", blockhash });
-  const transfer = built.instructions[0];
-  assert.equal(transfer.data.readUInt32LE(0), 2);
-  assert.equal(transfer.data.readBigUInt64LE(4), 10_000_000n);
-  assert.equal(built.instructions[1].data.toString("utf8"), "melearn:purchase-1");
+  const payer = "CByHmPLFQsDEoa8WvEGozBjfgMrHx36eGczvsiyCTRbS";
+  const recipient = "So11111111111111111111111111111111111111112";
+  const built = buildUnsignedTransfer({ payer, recipient, lamports: 10_000_000, purchaseId: "purchase-1", blockhash: "11111111111111111111111111111111" });
+  const bytes = Buffer.from(built, "base64");
+  const needle = Buffer.alloc(12);
+  needle.writeUInt32LE(2, 0);
+  needle.writeBigUInt64LE(10_000_000n, 4);
+  assert.ok(bytes.includes(needle));
+  assert.ok(bytes.includes(Buffer.from("melearn:purchase-1")));
 });
 
 test("cancel and chat text do not grant access, and confirm is idempotent", async () => {
@@ -81,7 +81,7 @@ test("cancel and chat text do not grant access, and confirm is idempotent", asyn
   );
 
   const again = createPurchase(db, userId, "english-cafe-01");
-  const payer = Keypair.generate().publicKey.toBase58();
+  const payer = "11111111111111111111111111111111";
   db.prepare("UPDATE purchases SET payer = ? WHERE id = ?").run(payer, again.id);
   const ready = { ...again, payer };
   const first = fulfillPurchase(db, ready, "5".repeat(88));

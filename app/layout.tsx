@@ -3,11 +3,12 @@ import { Noto_Sans_Thai } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import { getViewer } from "@/lib/viewer";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
 const noto = Noto_Sans_Thai({
   subsets: ["thai", "latin"],
   weight: ["400", "600", "700"],
-  variable: "--font-sans",
+  variable: "--font-noto",
 });
 
 export const metadata: Metadata = {
@@ -23,8 +24,8 @@ export const dynamic = "force-dynamic";
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const viewer = await getViewer();
   return (
-    <html lang={viewer.locale === "en" ? "en" : "th"}>
-      <body className={`${noto.variable} antialiased`}>
+    <html lang={viewer.locale === "en" ? "en" : "th"} className={cn("font-sans", noto.variable)}>
+      <body className="antialiased">
         <AppShell locale={viewer.locale}>{children}</AppShell>
       </body>
     </html>

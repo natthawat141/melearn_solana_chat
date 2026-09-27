@@ -57,7 +57,7 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
           <div className="ml-auto flex items-center gap-2">
             <div className="flex rounded-full bg-surface p-1" role="group" aria-label={t(locale, "profile.locale")}>
               {(["th", "en"] as const).map((item) => (
-                <button key={item} type="button" aria-pressed={locale === item} onClick={() => setLocale(item)} className={`min-h-11 rounded-full px-3 text-sm font-semibold ${locale === item ? "bg-primary text-white" : "text-muted"}`}>
+                <button key={item} type="button" aria-pressed={locale === item} onClick={() => setLocale(item)} className={`min-h-11 rounded-full px-3 text-sm font-semibold ${locale === item ? "bg-primary text-white" : "text-muted-foreground"}`}>
                   {item === "th" ? "TH" : "EN"}
                 </button>
               ))}
@@ -76,7 +76,7 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
               const active = item.match(pathname);
               return (
                 <li key={item.href}>
-                  <Link href={item.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${active ? "text-primary" : "text-muted"}`} aria-current={active ? "page" : undefined}>
+                  <Link href={item.href} className={`flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${active ? "text-primary" : "text-muted-foreground"}`} aria-current={active ? "page" : undefined}>
                     <Icon name={item.icon} />
                     {t(locale, item.label)}
                   </Link>

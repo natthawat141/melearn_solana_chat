@@ -1,6 +1,6 @@
 import nacl from "tweetnacl";
 import bs58 from "bs58";
-import { PublicKey } from "@solana/web3.js";
+import { address, getAddressEncoder } from "@solana/kit";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonError } from "@/lib/http";
@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     return jsonError(viewer.locale, 400, "CHALLENGE");
   }
   try {
-    const ok = nacl.sign.detached.verify(new TextEncoder().encode(challenge.message), bs58.decode(body.signature), new PublicKey(body.publicKey).toBytes());
+    const keyBytes = Uint8Array.from(getAddressEncoder().encode(address(body.publicKey)));
+    const ok = nacl.sign.detached.verify(new TextEncoder().encode(challenge.message), bs58.decode(body.signature), keyBytes);
     if (!ok) return jsonError(viewer.locale, 400, "WALLET");
     db.prepare("UPDATE wallet_challenges SET used = 1 WHERE nonce = ?").run(body.nonce);
     db.prepare("UPDATE users SET wallet_address = ? WHERE id = ?").run(body.publicKey, viewer.user.id);

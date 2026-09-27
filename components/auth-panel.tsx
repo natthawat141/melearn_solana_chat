@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button, TextField } from "@/components/ui";
+import { Button, TextField } from "@/components/melearn-ui";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 

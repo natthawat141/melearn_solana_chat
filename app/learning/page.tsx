@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Card } from "@/components/melearn-ui";
 import { getLesson, getTeacher, lessonTitle } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { formatWhen } from "@/lib/format";
@@ -19,7 +19,7 @@ export default async function LearningPage() {
   return (
     <div className="mx-auto w-full max-w-[860px] px-5">
       <h1>{t(viewer.locale, "nav.progress")}</h1>
-      {!viewer.user ? <p className="mt-2 text-sm text-muted">{t(viewer.locale, "guest.banner")}</p> : null}
+      {!viewer.user ? <p className="mt-2 text-sm text-muted-foreground">{t(viewer.locale, "guest.banner")}</p> : null}
       {rows.length === 0 ? (
         <Card className="mt-6">
           <p>{t(viewer.locale, "progress.empty")}</p>
@@ -31,12 +31,12 @@ export default async function LearningPage() {
         <div className="mt-6 grid gap-3">
           {rows.map(({ row, lesson, teacher }) => (
             <Card key={lesson.id}>
-              <p className="text-sm text-muted">{teacher.name[viewer.locale]} · {teacher.subject[viewer.locale]}</p>
+              <p className="text-sm text-muted-foreground">{teacher.name[viewer.locale]} · {teacher.subject[viewer.locale]}</p>
               <h2 className="mt-1 text-[18px]">{lessonTitle(lesson, viewer.locale)}</h2>
               <p className="text-sm">
                 {row.status === "completed" ? t(viewer.locale, "lesson.completed") : t(viewer.locale, "lesson.inProgress")} · {formatWhen(row.updated_at, viewer.locale)}
               </p>
-              <p className="text-sm text-muted">
+              <p className="text-sm text-muted-foreground">
                 {t(viewer.locale, "chat.attempts")}: {row.attempts} · {t(viewer.locale, "chat.hints")}: {row.hints_used}
               </p>
               <Link href={`/learn/${lesson.id}`} className="mt-3 inline-flex min-h-12 items-center justify-center rounded-[14px] bg-primary px-4 font-semibold text-white">

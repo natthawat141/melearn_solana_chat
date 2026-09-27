@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Card } from "@/components/melearn-ui";
 import { getLesson, getTeacher, lessonTitle } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { formatWhen } from "@/lib/format";
@@ -29,10 +29,10 @@ export default async function ChatsPage() {
             if (!teacher || !lesson) return null;
             return (
               <Card key={chat.id}>
-                <p className="text-sm text-muted">{teacher.name[viewer.locale]}</p>
+                <p className="text-sm text-muted-foreground">{teacher.name[viewer.locale]}</p>
                 <h2 className="text-[18px]">{lessonTitle(lesson, viewer.locale)}</h2>
                 <p className="line-clamp-2 text-sm">{chat.last_text}</p>
-                <p className="text-xs text-muted">{formatWhen(chat.updated_at, viewer.locale)}</p>
+                <p className="text-xs text-muted-foreground">{formatWhen(chat.updated_at, viewer.locale)}</p>
                 <Link href={`/learn/${lesson.id}`} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary">
                   {t(viewer.locale, "chats.open")}
                 </Link>

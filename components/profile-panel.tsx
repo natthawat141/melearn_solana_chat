@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthPanel } from "@/components/auth-panel";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { Button, Card, TextField } from "@/components/ui";
+import { Button, Card, TextField } from "@/components/melearn-ui";
 import { shortAddress } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -103,10 +103,10 @@ export function ProfilePanel({
       <div className="mx-auto grid w-full max-w-[760px] gap-4 px-5">
         <h1>{t(locale, "profile.title")}</h1>
         <Card>
-          <p className="mb-4 text-muted">{t(locale, "profile.guest")}</p>
+          <p className="mb-4 text-muted-foreground">{t(locale, "profile.guest")}</p>
           <AuthPanel locale={locale} />
         </Card>
-        <p className="text-sm text-muted">{t(locale, "profile.historyNote")}</p>
+        <p className="text-sm text-muted-foreground">{t(locale, "profile.historyNote")}</p>
       </div>
     );
   }
@@ -147,10 +147,10 @@ export function ProfilePanel({
         <Button type="button" variant="secondary" className="mt-3" onClick={linkWallet}>
           {t(locale, "profile.walletLink")}
         </Button>
-        <p className="mt-3 text-sm text-muted">{t(locale, "profile.historyNote")}</p>
+        <p className="mt-3 text-sm text-muted-foreground">{t(locale, "profile.historyNote")}</p>
       </Card>
       <Card>
-        <p className="text-sm text-muted">{tutor === "model" ? t(locale, "profile.tutorModel") : t(locale, "profile.tutorLesson")}</p>
+        <p className="text-sm text-muted-foreground">{tutor === "model" ? t(locale, "profile.tutorModel") : t(locale, "profile.tutorLesson")}</p>
       </Card>
       <Button type="button" variant="secondary" onClick={logout}>
         {t(locale, "auth.logout")}

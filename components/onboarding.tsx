@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card } from "@/components/ui";
+import { Button, Card } from "@/components/melearn-ui";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
@@ -29,7 +29,7 @@ export function Onboarding({ locale }: { locale: Locale }) {
   return (
     <Card className="mb-6 bg-[#E5F4FF]">
       <h2>{t(locale, "onboarding.title")}</h2>
-      <p className="mt-1 text-muted">{t(locale, "onboarding.body")}</p>
+      <p className="mt-1 text-muted-foreground">{t(locale, "onboarding.body")}</p>
       <p className="mt-4 text-sm font-semibold">{t(locale, "onboarding.level")}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {levels.map((item) => (

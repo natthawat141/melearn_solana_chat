@@ -2,21 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Connection, Transaction } from "@solana/web3.js";
 import { AuthPanel } from "@/components/auth-panel";
-import { Button, Card, Pill } from "@/components/ui";
+import { Button, Card, Pill } from "@/components/melearn-ui";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
+import { connectSolanaWallet, sendSolanaTransaction } from "@/lib/wallet";
 
 type Phase = "review" | "approval" | "pending" | "cancelled" | "failed" | "insufficient" | "success";
 
 type Purchase = { id: string; status: string; signature: string | null };
-
-function walletProvider() {
-  if (typeof window === "undefined") return null;
-  if (window.solana?.isPhantom) return window.solana;
-  return window.solflare || window.solana || null;
-}
 
 function bytesFromBase64(value: string) {
   const binary = atob(value);
@@ -61,13 +55,12 @@ export function UnlockPanel({
   const [walletMissing, setWalletMissing] = useState(false);
 
   async function connect() {
-    const provider = walletProvider();
-    if (!provider) {
+    const account = await connectSolanaWallet();
+    if (!account) {
       setWalletMissing(true);
       return;
     }
-    const result = await provider.connect();
-    setPublicKey(result.publicKey.toString());
+    setPublicKey(account);
     setWalletMissing(false);
   }
 
@@ -124,24 +117,8 @@ export function UnlockPanel({
       setError(built.message || t(locale, "pay.failed"));
       return;
     }
-    const provider = walletProvider();
-    if (!provider) {
-      setWalletMissing(true);
-      setPhase("review");
-      return;
-    }
     try {
-      const tx = Transaction.from(bytesFromBase64(built.transaction));
-      let signature: string;
-      if (provider.signAndSendTransaction) {
-        const sent = await provider.signAndSendTransaction(tx);
-        signature = sent.signature;
-      } else if (provider.signTransaction) {
-        const signed = await provider.signTransaction(tx);
-        signature = await new Connection(built.rpcUrl, "confirmed").sendRawTransaction(signed.serialize());
-      } else {
-        throw new Error("NO_WALLET");
-      }
+      const signature = await sendSolanaTransaction(bytesFromBase64(built.transaction), built.rpcUrl);
       setPurchase({ id: quote.purchase.id, status: "pending", signature });
       setPhase("pending");
       for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -174,10 +151,10 @@ export function UnlockPanel({
     <div className="mx-auto grid w-full max-w-[760px] gap-4 px-5 py-2">
       <Pill>{t(locale, "pay.testBadge")}</Pill>
       <h1>{t(locale, "pay.title")}</h1>
-      <p className="text-muted">{t(locale, "pay.test")}</p>
+      <p className="text-muted-foreground">{t(locale, "pay.test")}</p>
       <Card>
         <h2 className="text-[18px]">{title}</h2>
-        <p className="mt-1 text-muted">{summary}</p>
+        <p className="mt-1 text-muted-foreground">{summary}</p>
         <p className="mt-3 text-sm font-semibold">{t(locale, "pay.included")}</p>
         <ul className="mt-1 list-disc pl-5 text-sm">
           {objectives.map((item) => (
@@ -187,7 +164,7 @@ export function UnlockPanel({
       </Card>
       <ol className="grid gap-2">
         {steps.map((step, index) => (
-          <li key={step} className={`rounded-[14px] px-3 py-2 text-sm font-semibold ${index === activeStep ? "bg-[#E7EDFF] text-primary" : "text-muted"}`}>
+          <li key={step} className={`rounded-[14px] px-3 py-2 text-sm font-semibold ${index === activeStep ? "bg-[#E7EDFF] text-primary" : "text-muted-foreground"}`}>
             {index + 1}. {t(locale, step)}
           </li>
         ))}
@@ -211,7 +188,7 @@ export function UnlockPanel({
             <span className="font-semibold">{t(locale, "pay.recipient")}: </span>
             {recipient}
           </p>
-          <p className="text-sm text-muted">{t(locale, "pay.fee")}</p>
+          <p className="text-sm text-muted-foreground">{t(locale, "pay.fee")}</p>
           <p className="text-sm font-semibold">{t(locale, "pay.termsTitle")}</p>
           <p className="text-sm">{terms}</p>
           {phase === "success" || owned ? (
@@ -230,7 +207,7 @@ export function UnlockPanel({
           {phase === "pending" ? (
             <div className="grid gap-3">
               <p>{t(locale, "pay.pending")}</p>
-              <p className="text-sm text-muted">{t(locale, "pay.syncing")}</p>
+              <p className="text-sm text-muted-foreground">{t(locale, "pay.syncing")}</p>
               {purchase?.signature ? (
                 <Button type="button" variant="secondary" onClick={() => check(purchase.id, purchase.signature || "")}>
                   {t(locale, "pay.checkAgain")}
@@ -259,7 +236,7 @@ export function UnlockPanel({
           {walletMissing ? <p className="text-sm">{t(locale, "pay.noWallet")}</p> : null}
           {phase !== "success" && phase !== "pending" && !owned ? (
             <div className="grid gap-3">
-              <p className="text-sm text-muted">{t(locale, "pay.review")}</p>
+              <p className="text-sm text-muted-foreground">{t(locale, "pay.review")}</p>
               {!publicKey ? (
                 <Button type="button" onClick={connect}>
                   {t(locale, "pay.connect")}
@@ -270,7 +247,7 @@ export function UnlockPanel({
               <Button type="button" disabled={!publicKey || lamports === null || phase === "approval"} onClick={pay}>
                 {priceLabel ? `${t(locale, "pay.confirm")} · ${priceLabel}` : t(locale, "pay.confirm")}
               </Button>
-              <p className="text-xs text-muted">{t(locale, "pay.connectHint")}</p>
+              <p className="text-xs text-muted-foreground">{t(locale, "pay.connectHint")}</p>
             </div>
           ) : null}
           {phase === "failed" || phase === "cancelled" ? (

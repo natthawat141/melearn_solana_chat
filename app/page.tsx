@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Onboarding } from "@/components/onboarding";
-import { Card, Pill } from "@/components/ui";
+import { Card, Pill } from "@/components/melearn-ui";
 import { getLesson, lessonTitle, teacherImage, teacherPersona, teachers } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { formatWhen } from "@/lib/format";
@@ -22,7 +22,7 @@ export default async function HomePage() {
         <div aria-hidden className="pointer-events-none absolute -right-8 -top-10 size-36 rounded-full bg-cyan/30" />
         <p className="text-sm font-semibold text-primary">{t(viewer.locale, "landing.kicker")}</p>
         <h1 className="mt-2 max-w-xl">{t(viewer.locale, "home.title")}</h1>
-        <p className="mt-2 max-w-2xl text-muted">{t(viewer.locale, "landing.subtitle")}</p>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{t(viewer.locale, "landing.subtitle")}</p>
       </div>
       {!viewer.onboarded ? (
         <div className="mt-6">
@@ -31,9 +31,9 @@ export default async function HomePage() {
       ) : null}
       {latest && lesson && teacher ? (
         <Card className="mt-6">
-          <p className="text-sm text-muted">{t(viewer.locale, "continue.with")} {teacher.name[viewer.locale]}</p>
+          <p className="text-sm text-muted-foreground">{t(viewer.locale, "continue.with")} {teacher.name[viewer.locale]}</p>
           <h2 className="mt-1 text-[20px]">{lessonTitle(lesson, viewer.locale)}</h2>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             {teacher.subject[viewer.locale]} · {formatWhen(latest.updated_at, viewer.locale)}
           </p>
           <Link href={`/learn/${lesson.id}`} className="mt-3 inline-flex min-h-12 items-center justify-center rounded-[14px] bg-primary px-4 font-semibold text-white">
@@ -70,7 +70,7 @@ export default async function HomePage() {
                 )}
                 <div className="p-3">
                   <p className="font-semibold">{item.name[viewer.locale]}</p>
-                  <p className="text-sm text-muted">{item.subject[viewer.locale]}</p>
+                  <p className="text-sm text-muted-foreground">{item.subject[viewer.locale]}</p>
                   <p className="mt-2 line-clamp-2 text-sm">{teacherPersona(item, viewer.locale)}</p>
                   <div className="mt-3">
                     <Pill tone={item.mvpEnabled ? "blue" : "muted"}>{item.mvpEnabled ? t(viewer.locale, "teacher.start") : t(viewer.locale, "teacher.soon")}</Pill>
@@ -93,7 +93,7 @@ export default async function HomePage() {
           })}
         </div>
       </section>
-      <p className="mt-8 text-sm text-muted">{t(viewer.locale, "landing.demoNote")}</p>
+      <p className="mt-8 text-sm text-muted-foreground">{t(viewer.locale, "landing.demoNote")}</p>
     </div>
   );
 }

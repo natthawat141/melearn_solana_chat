@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { address } from "@solana/kit";
 import { NextResponse } from "next/server";
 import { rpcUrl } from "@/lib/content";
 import { getDb } from "@/lib/db";
@@ -17,19 +17,20 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (purchase.status === "confirmed") return jsonError(viewer.locale, 409, "OWNED");
   if (!body?.payer) return jsonError(viewer.locale, 400, "WALLET");
   try {
-    new PublicKey(body.payer);
+    address(body.payer);
     const ready = attachPayer(getDb(), purchase, body.payer);
     const block = await recentBlockhash();
-    const tx = buildUnsignedTransfer({
+    const transaction = buildUnsignedTransfer({
       payer: body.payer,
       recipient: ready.recipient,
       lamports: ready.price_lamports,
       purchaseId: ready.id,
       blockhash: block.blockhash,
+      lastValidBlockHeight: block.lastValidBlockHeight,
     });
     return NextResponse.json({
       purchaseId: ready.id,
-      transaction: tx.serialize({ requireAllSignatures: false, verifySignatures: false }).toString("base64"),
+      transaction,
       rpcUrl: rpcUrl(),
       lamports: ready.price_lamports,
       recipient: ready.recipient,

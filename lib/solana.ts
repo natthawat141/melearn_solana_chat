@@ -1,25 +1,26 @@
+import { getAddMemoInstruction } from "@solana-program/memo";
+import { getTransferSolInstruction } from "@solana-program/system";
 import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { paymentNetwork, paymentRecipient, rpcUrl } from "@/lib/content";
+  address,
+  appendTransactionMessageInstructions,
+  compileTransaction,
+  createNoopSigner,
+  createSolanaRpc,
+  createTransactionMessage,
+  getBase64EncodedWireTransaction,
+  pipe,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  type Signature,
+} from "@solana/kit";
+import type { Blockhash } from "@solana/rpc-types";
+import { paymentNetwork, rpcUrl } from "@/lib/content";
 import { memoFor, type ParsedTx, verifyTransfer, type TransferExpectation } from "@/lib/verify-transfer";
-
-const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
 export function assertDevnet() {
   const network = paymentNetwork();
-  if (network !== "devnet") {
-    throw new Error("NETWORK");
-  }
+  if (network !== "devnet") throw new Error("NETWORK");
   return network;
-}
-
-export function recipientKey() {
-  return new PublicKey(paymentRecipient());
 }
 
 export function buildUnsignedTransfer(input: {
@@ -28,32 +29,39 @@ export function buildUnsignedTransfer(input: {
   lamports: number;
   purchaseId: string;
   blockhash: string;
+  lastValidBlockHeight?: bigint;
 }) {
-  const payer = new PublicKey(input.payer);
-  const tx = new Transaction();
-  tx.add(
-    SystemProgram.transfer({
-      fromPubkey: payer,
-      toPubkey: new PublicKey(input.recipient),
-      lamports: input.lamports,
-    }),
+  const payer = address(input.payer);
+  const signer = createNoopSigner(payer);
+  const message = pipe(
+    createTransactionMessage({ version: "legacy" }),
+    (draft) => setTransactionMessageFeePayer(payer, draft),
+    (draft) =>
+      setTransactionMessageLifetimeUsingBlockhash(
+        { blockhash: input.blockhash as Blockhash, lastValidBlockHeight: input.lastValidBlockHeight ?? 0n },
+        draft,
+      ),
+    (draft) =>
+      appendTransactionMessageInstructions(
+        [
+          getTransferSolInstruction({
+            source: signer,
+            destination: address(input.recipient),
+            amount: input.lamports,
+          }),
+          getAddMemoInstruction({ memo: memoFor(input.purchaseId), signers: [signer] }),
+        ],
+        draft,
+      ),
   );
-  tx.add(
-    new TransactionInstruction({
-      keys: [{ pubkey: payer, isSigner: true, isWritable: false }],
-      programId: MEMO_PROGRAM_ID,
-      data: Buffer.from(memoFor(input.purchaseId), "utf8"),
-    }),
-  );
-  tx.feePayer = payer;
-  tx.recentBlockhash = input.blockhash;
-  return tx;
+  return getBase64EncodedWireTransaction(compileTransaction(message));
 }
 
 export async function recentBlockhash() {
   assertDevnet();
-  const connection = new Connection(rpcUrl(), "confirmed");
-  return connection.getLatestBlockhash("confirmed");
+  const rpc = createSolanaRpc(rpcUrl());
+  const { value } = await rpc.getLatestBlockhash({ commitment: "confirmed" }).send();
+  return value;
 }
 
 type RpcInstruction = {
@@ -62,12 +70,14 @@ type RpcInstruction = {
   parsed?: unknown;
 };
 
+type RpcAccount = { pubkey?: string; signer?: boolean } | string;
+
 type RpcResponse = {
   meta?: { err?: unknown } | null;
   transaction?: {
     message?: {
-      accountKeys?: Array<{ pubkey?: string; signer?: boolean } | string>;
-      instructions?: RpcInstruction[];
+      accountKeys?: readonly RpcAccount[];
+      instructions?: readonly RpcInstruction[];
     };
   };
 };
@@ -82,25 +92,27 @@ export function fromRpcTransaction(response: RpcResponse): ParsedTx {
     .filter((key): key is string => Boolean(key));
   return {
     err: response.meta?.err ?? null,
-    instructions: response.transaction?.message?.instructions ?? [],
+    instructions: [...(response.transaction?.message?.instructions ?? [])],
     signers,
   };
 }
 
 export async function verifySignature(signature: string, expected: TransferExpectation) {
   assertDevnet();
-  const connection = new Connection(rpcUrl(), "confirmed");
+  const rpc = createSolanaRpc(rpcUrl());
   try {
-    const response = await connection.getParsedTransaction(signature, {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    });
+    const response = await rpc
+      .getTransaction(signature as Signature, {
+        commitment: "confirmed",
+        encoding: "jsonParsed",
+        maxSupportedTransactionVersion: 0,
+      })
+      .send();
     if (!response) return { found: false as const, invalid: false as const };
-    const parsed = fromRpcTransaction(response as unknown as RpcResponse);
-    return { found: true as const, invalid: false as const, result: verifyTransfer(parsed, expected) };
+    return { found: true as const, invalid: false as const, result: verifyTransfer(fromRpcTransaction(response), expected) };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (/WrongSize|invalid param/i.test(message)) return { found: false as const, invalid: true as const };
+    const message = error instanceof Error ? error.message : String(error);
+    if (/WrongSize|invalid param|invalid base58|invalid signature/i.test(message)) return { found: false as const, invalid: true as const };
     throw error;
   }
 }
