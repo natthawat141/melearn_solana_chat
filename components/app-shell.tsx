@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { BookOpen, Home, MessageCircle, Sparkles, UserRound } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -20,18 +20,8 @@ const items = [
 
 export function AppShell({ locale, children }: { locale: Locale; children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const marketing = pathname === "/" ;
   const chat = pathname.startsWith("/learn");
-
-  async function setLocale(next: Locale) {
-    await fetch("/api/preferences", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ locale: next }),
-    });
-    router.refresh();
-  }
 
   if (marketing) return <div className="min-h-dvh bg-background text-foreground">{children}</div>;
 
@@ -39,9 +29,8 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
     <SidebarProvider className={chat ? "h-dvh overflow-hidden" : "min-h-dvh"}>
       <Sidebar collapsible="offcanvas">
         <SidebarHeader>
-          <Link href="/app" className="flex items-center gap-2 px-2 py-1">
+          <Link href="/app" className="flex items-center px-2 py-1">
             <Image src="/brand/logo.png" alt="Melearn Chat" width={36} height={36} className="size-9 object-contain" />
-            <span className="font-semibold">Melearn Chat</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>
@@ -70,18 +59,12 @@ export function AppShell({ locale, children }: { locale: Locale; children: React
           <p className="px-2 text-xs text-muted-foreground">{t(locale, "landing.freeNote")}</p>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className={chat ? "flex h-dvh min-h-0 flex-col overflow-hidden bg-background" : "bg-background"}>
+      <SidebarInset className={chat ? "app-workspace flex h-dvh min-h-0 flex-col overflow-hidden bg-background" : "app-workspace bg-background"}>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3">
           <SidebarTrigger className="size-11" />
           <div className="ml-auto flex items-center gap-2">
-            <div className="flex rounded-full bg-muted p-1" role="group" aria-label={t(locale, "profile.locale")}>
-              {(["th", "en"] as const).map((item) => (
-                <Button key={item} type="button" size="sm" variant={locale === item ? "default" : "ghost"} aria-pressed={locale === item} onClick={() => setLocale(item)} className="min-h-11 rounded-full px-3">
-                  {item === "th" ? "TH" : "EN"}
-                </Button>
-              ))}
-            </div>
-            <ThemeToggle label={locale === "en" ? "Theme" : "ธีม"} />
+            <LanguageSwitcher locale={locale} />
+            <ThemeToggle label={locale === "en" ? "Theme" : "ธีม"} lightLabel={locale === "th" ? "ใช้ธีมสว่าง" : "Use light theme"} darkLabel={locale === "th" ? "ใช้ธีมมืด" : "Use dark theme"} />
           </div>
         </header>
         <div className={chat ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex-1 pb-8"}>{children}</div>

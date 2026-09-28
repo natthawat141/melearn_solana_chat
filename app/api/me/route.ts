@@ -30,6 +30,7 @@ export async function PATCH(request: Request) {
     displayName?: string;
   } | null;
   if (!body) return jsonError(viewer.locale, 400, "NAME");
+  if (!viewer.user && body.onboarded !== undefined) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const locale = body.locale === "en" || body.locale === "th" ? body.locale : undefined;
   const level = body.level === null ? null : body.level && levels.has(body.level) ? body.level : undefined;
   const goal = body.goal === null ? null : body.goal && goals.has(body.goal) ? body.goal : undefined;

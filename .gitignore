@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+._*
 *.pem
 
 # debug
@@ -40,6 +41,9 @@ yarn-error.log*
 # local database and session secret
 /data
 /agent-tools
+
+# Local compatibility alias, never a second checkout
+/melearn_solana_chat
 
 # vercel
 .vercel

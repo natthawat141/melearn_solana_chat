@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AuthPanel } from "@/components/auth-panel";
 import { Button, Card, Pill } from "@/components/melearn-ui";
+import { Button as ActionButton } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 import { connectSolanaWallet, sendSolanaTransaction } from "@/lib/wallet";
@@ -164,7 +164,7 @@ export function UnlockPanel({
       </Card>
       <ol className="grid gap-2">
         {steps.map((step, index) => (
-          <li key={step} className={`rounded-[14px] px-3 py-2 text-sm font-semibold ${index === activeStep ? "bg-[#E7EDFF] text-primary" : "text-muted-foreground"}`}>
+          <li key={step} className={`rounded-[14px] px-3 py-2 text-sm font-semibold ${index === activeStep ? "bg-secondary text-secondary-foreground" : "text-muted-foreground"}`}>
             {index + 1}. {t(locale, step)}
           </li>
         ))}
@@ -172,7 +172,14 @@ export function UnlockPanel({
       {!signedIn ? (
         <Card>
           <p className="mb-3 text-sm">{t(locale, "auth.needAccount")}</p>
-          <AuthPanel locale={locale} />
+          <div className="flex flex-wrap gap-2">
+            <ActionButton asChild className="min-h-11">
+              <Link href={`/login?next=${encodeURIComponent(`/unlock/${lessonId}`)}`}>{t(locale, "auth.login")}</Link>
+            </ActionButton>
+            <ActionButton asChild variant="outline" className="min-h-11">
+              <Link href={`/login?next=${encodeURIComponent(`/unlock/${lessonId}`)}&mode=register`}>{t(locale, "auth.register")}</Link>
+            </ActionButton>
+          </div>
         </Card>
       ) : (
         <Card className="grid gap-3">
@@ -199,7 +206,7 @@ export function UnlockPanel({
                   {t(locale, "pay.receipt")}
                 </a>
               ) : null}
-              <Link href={`/learn/${lessonId}`} className="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-primary px-4 font-semibold text-white">
+              <Link href={`/learn/${lessonId}`} className="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-action px-4 font-semibold text-action-foreground">
                 {t(locale, "pay.openLesson")}
               </Link>
             </div>

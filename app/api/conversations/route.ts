@@ -6,6 +6,7 @@ import { getViewer } from "@/lib/viewer";
 
 export async function POST(request: Request) {
   const viewer = await getViewer();
+  if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const body = (await request.json().catch(() => null)) as { lessonId?: string } | null;
   if (!body?.lessonId) return jsonError(viewer.locale, 400, "LESSON");
   try {

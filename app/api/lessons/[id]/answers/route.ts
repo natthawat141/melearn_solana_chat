@@ -6,6 +6,7 @@ import { getViewer } from "@/lib/viewer";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const viewer = await getViewer();
+  if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const { id } = await context.params;
   const body = (await request.json().catch(() => null)) as { attemptId?: string; answer?: string } | null;
   if (!body?.attemptId || body.answer === undefined) return jsonError(viewer.locale, 400, "BAD_MESSAGE_ID");

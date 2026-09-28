@@ -3,8 +3,8 @@ import { ChatRoom } from "@/components/chat-room";
 import { getLesson, getTeacher } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { LearningError, openConversation } from "@/lib/learning";
-import { readQuota } from "@/lib/quota";
-import { localizedHistoryText } from "@/lib/tutor";
+import { readQuota, type QuotaState } from "@/lib/quota";
+import { emptyProgress, localizedHistoryText, openingMessage } from "@/lib/tutor";
 import { getViewer } from "@/lib/viewer";
 
 export default async function LearnPage({ params }: { params: Promise<{ lessonId: string }> }) {
@@ -14,6 +14,23 @@ export default async function LearnPage({ params }: { params: Promise<{ lessonId
   if (!lesson || !teacher) notFound();
   if (!teacher.mvpEnabled) redirect(`/teachers/${teacher.id}`);
   const viewer = await getViewer();
+  const lessonPath = `/learn/${lessonId}`;
+  if (viewer.user && !viewer.onboarded) redirect(`/setup?next=${encodeURIComponent(lessonPath)}`);
+  if (!viewer.user) {
+    const previewQuota: QuotaState = { used: 0, limit: 0, remaining: 0, resetAt: new Date(0).toISOString(), blocked: false };
+    return (
+      <ChatRoom
+        locale={viewer.locale}
+        teacher={teacher}
+        lesson={lesson}
+        conversationId=""
+        initialMessages={[{ id: `preview-${lessonId}`, role: "assistant", text: openingMessage(teacher, lesson, viewer.locale) }]}
+        initialProgress={emptyProgress(lesson.practice.length)}
+        initialQuota={previewQuota}
+        isGuest
+      />
+    );
+  }
   try {
     const opened = openConversation(getDb(), {
       ownerType: viewer.ownerType,

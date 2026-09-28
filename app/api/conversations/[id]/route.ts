@@ -7,6 +7,7 @@ import type { OwnerType } from "@/lib/types";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const viewer = await getViewer();
+  if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const { id } = await context.params;
   const db = getDb();
   const conversation = db.prepare("SELECT * FROM conversations WHERE id = ?").get(id) as

@@ -15,9 +15,9 @@ export async function POST(request: Request) {
       password: body.password || "",
       guestId: viewer.guestId,
       locale: viewer.locale,
-      level: viewer.level,
-      goal: viewer.goal,
-      onboarded: viewer.onboarded,
+      level: null,
+      goal: null,
+      onboarded: false,
     });
     const jar = await cookies();
     jar.set("ml_session", signSession(user.id), {

@@ -11,6 +11,7 @@ const modes = new Set<ChatMode>(["teach", "hint", "example", "practice"]);
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const viewer = await getViewer();
+  if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const headerStore = await headers();
   if (!rateLimit(`msg:${clientIp(headerStore)}:${viewer.ownerId}`, 40, 60_000)) {
     return jsonError(viewer.locale, 429, "RATE_LIMIT", true);

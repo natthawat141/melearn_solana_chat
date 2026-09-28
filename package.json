@@ -6,9 +6,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "next dev --turbopack -H 0.0.0.0 -p 43123",
+    "dev": "node scripts/run-next.mjs dev",
     "build": "next build --turbopack",
-    "start": "next start -H 0.0.0.0 -p 43123",
+    "start": "node scripts/run-next.mjs start",
     "lint": "eslint",
     "test": "tsx --test tests/*.test.ts"
   },

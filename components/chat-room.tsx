@@ -4,9 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icon";
-import { UpgradeButton } from "@/components/upgrade-button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from "@/components/ui/input-group";
+import { formatWhen } from "@/lib/format";
+import { clearLessonDraft, readLessonDraft, writeLessonDraft } from "@/lib/lesson-draft";
 import type { QuotaState } from "@/lib/quota";
 import { lessonObjectives, lessonTitle, practicePrompt, teacherImage } from "@/lib/content";
 import { t } from "@/lib/i18n";
@@ -43,18 +46,26 @@ export function ChatRoom({
   const [progress, setProgress] = useState(initialProgress);
   const [quota, setQuota] = useState(initialQuota);
   const [draft, setDraft] = useState("");
+  const [draftReady, setDraftReady] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
   const [retry, setRetry] = useState<{ id: string; mode: ChatMode; text: string } | null>(null);
   const [stick, setStick] = useState(true);
   const [unseen, setUnseen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const authPath = `/login?next=${encodeURIComponent(`/learn/${lesson.id}`)}`;
   const scroller = useRef<HTMLDivElement>(null);
   const end = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   const lastAssistant = [...messages].reverse().find((message) => message.role === "assistant")?.text ?? "";
   const objectives = lessonObjectives(lesson, locale);
   const current = lesson.practice[progress.practiceIndex];
+
+  useEffect(() => {
+    setDraft(readLessonDraft(lesson.id));
+    setDraftReady(true);
+  }, [lesson.id]);
 
   useEffect(() => {
     const on = () => setOffline(false);
@@ -81,6 +92,7 @@ export function ChatRoom({
   }, [draft]);
 
   async function send(mode: ChatMode, text: string, clientMessageId?: string) {
+    if (isGuest) { setAuthOpen(true); return; }
     if (sending || quota.blocked) return;
     if (mode === "teach" && !text.trim()) return;
     if (text.length > 2000) {
@@ -97,6 +109,7 @@ export function ChatRoom({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ clientMessageId: id, text, mode }),
       });
+      if (response.status === 401) { setAuthOpen(true); setRetry(null); return; }
       const data = (await response.json()) as { message?: string; messages?: ChatMessage[]; progress?: ProgressState; quota?: QuotaState };
       if (data.quota) setQuota(data.quota);
       if (!response.ok || !data.messages || !data.progress) {
@@ -107,7 +120,10 @@ export function ChatRoom({
       setMessages(data.messages);
       setProgress(data.progress);
       setRetry(null);
-      if (mode === "teach") setDraft("");
+      if (mode === "teach") {
+        clearLessonDraft(lesson.id);
+        setDraft("");
+      }
     } catch {
       setRetry({ id, mode, text });
       setError(offline ? t(locale, "chat.offline") : t(locale, "chat.error"));
@@ -146,11 +162,11 @@ export function ChatRoom({
       </header>
 
       {isGuest ? (
-        <p className="shrink-0 bg-muted px-4 py-2 text-center text-sm md:px-6">
-          {t(locale, "guest.banner")}{" "}
-          <Link href="/profile" className="inline-flex min-h-11 items-center font-semibold text-primary">
-            {t(locale, "guest.signin")}
-          </Link>
+          <p className="shrink-0 bg-muted px-4 py-2 text-center text-sm text-muted-foreground md:px-6">
+          {t(locale, "chat.previewBanner")}{" "}
+          <Button variant="link" onClick={() => setAuthOpen(true)}>
+            {t(locale, "auth.register")}
+          </Button>
         </p>
       ) : null}
 
@@ -203,7 +219,7 @@ export function ChatRoom({
       <div className="relative shrink-0 bg-background px-3 pb-[max(10px,env(safe-area-inset-bottom))] pt-1 md:px-4">
         {unseen ? (
           <div className="absolute inset-x-0 bottom-full z-10 flex justify-center pb-2">
-            <button type="button" className="min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(54,85,214,0.28)]" onClick={() => end.current?.scrollIntoView({ block: "end" })}>
+            <button type="button" className="min-h-11 rounded-full bg-action px-4 text-sm font-semibold text-action-foreground shadow-[0_8px_24px_rgba(54,85,214,0.28)]" onClick={() => end.current?.scrollIntoView({ block: "end" })}>
               {t(locale, "chat.newMessages")}
             </button>
           </div>
@@ -235,63 +251,85 @@ export function ChatRoom({
               <p className="mt-1">{practicePrompt(current, locale)}</p>
             </section>
           ) : null}
-          {offline ? <p className="mb-2 text-sm text-muted-foreground">{t(locale, "chat.offline")}</p> : null}
+          {offline ? (
+            <Alert className="mb-2">
+              <AlertDescription>{t(locale, "chat.offline")}</AlertDescription>
+            </Alert>
+          ) : null}
           {error ? (
-            <p className="mb-2 text-sm text-error">
-              {error}{" "}
-              {retry ? (
-                <button type="button" className="font-semibold underline" onClick={() => send(retry.mode, retry.text, retry.id)}>
-                  {t(locale, "chat.retry")}
-                </button>
-              ) : null}
+            <Alert variant="destructive" className="mb-2">
+              <AlertDescription>
+                {error}{" "}
+                {retry ? (
+                  <Button type="button" variant="link" className="h-auto px-0" onClick={() => send(retry.mode, retry.text, retry.id)}>
+                    {t(locale, "chat.retry")}
+                  </Button>
+                ) : null}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {!isGuest ? (
+            <p className="mb-2 text-xs text-muted-foreground">
+              {quota.blocked
+                ? `${t(locale, "quota.blocked")} ${formatWhen(quota.resetAt, locale)}`
+                : `${t(locale, "quota.left")} ${quota.remaining}/${quota.limit} ${t(locale, "quota.prompts")}`}
             </p>
           ) : null}
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground">
-              {t(locale, "quota.left")} {quota.remaining}/{quota.limit} {t(locale, "quota.prompts")}
-            </p>
-            {quota.blocked ? <UpgradeButton locale={locale} className="min-h-11" /> : null}
-          </div>
           <div className="mb-2 flex flex-wrap gap-2">
             {chipModes.map(([mode, key, icon]) => (
-              <Button key={mode} type="button" variant="outline" disabled={sending || quota.blocked} onClick={() => send(mode, "")} className="h-11 min-h-11 rounded-full border-border bg-card px-3 text-sm font-semibold text-primary">
+              <Button key={mode} type="button" variant="outline" disabled={sending || (!isGuest && quota.blocked)} onClick={() => send(mode, "")} className="h-11 min-h-11 rounded-full border-border bg-card px-3 text-sm font-semibold text-primary">
                 <Icon name={icon} className="size-4" />
                 {t(locale, key)}
               </Button>
             ))}
           </div>
           <form
-            className="overflow-hidden rounded-[24px] border border-border bg-card shadow-[0_8px_28px_rgba(54,85,214,0.08)] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25"
             onSubmit={(event) => {
               event.preventDefault();
               void send("teach", draft);
             }}
           >
-            <label className="block">
-              <span className="sr-only">{t(locale, "chat.placeholder")}</span>
-              <Textarea
+            <InputGroup className="rounded-3xl bg-card">
+              <InputGroupTextarea
                 ref={field}
                 value={draft}
-                onChange={(event) => setDraft(event.target.value)}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setDraft(next);
+                  if (draftReady) writeLessonDraft(lesson.id, next);
+                }}
                 onKeyDown={onKeyDown}
                 placeholder={t(locale, "chat.placeholder")}
                 rows={1}
                 maxLength={4000}
-                className="max-h-40 min-h-12 w-full resize-none rounded-none border-0 bg-transparent px-4 pt-3.5 text-[15px] leading-6 shadow-none [field-sizing:fixed] focus-visible:border-transparent focus-visible:ring-0 md:text-[15px]"
+                aria-label={t(locale, "chat.placeholder")}
+                className="max-h-40 min-h-12 px-4 pt-3.5 text-[15px] leading-6 [field-sizing:fixed] md:text-[15px]"
               />
-            </label>
-            <div className="flex items-center justify-between gap-3 px-2 pb-2">
-              <p className={`px-2 text-xs ${draft.length > 2000 ? "text-error" : "text-muted-foreground"} ${draft.length >= 1600 ? "" : "invisible"}`} aria-hidden={draft.length < 1600}>
-                {draft.length}/2000
-              </p>
-              <Button type="submit" size="icon" disabled={sending || quota.blocked || !draft.trim()} className="size-11 rounded-full disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100" aria-label={t(locale, "chat.send")}>
-                <Icon name="send" />
-              </Button>
-            </div>
+              <InputGroupAddon align="block-end" className="justify-between">
+                <p className={`text-xs ${draft.length > 2000 ? "text-destructive" : "text-muted-foreground"} ${draft.length >= 1600 ? "" : "invisible"}`} aria-hidden={draft.length < 1600}>
+                  {draft.length}/2000
+                </p>
+                <InputGroupButton type="submit" size="icon-sm" variant="default" disabled={sending || (!isGuest && quota.blocked) || !draft.trim()} className="size-11 rounded-full" aria-label={t(locale, "chat.send")}>
+                  <Icon name="send" />
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
           </form>
           <p className="px-2 pt-2 text-center text-xs text-muted-foreground">{t(locale, "chat.aiNotice")}</p>
         </div>
       </div>
+      <Dialog open={authOpen} onOpenChange={setAuthOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t(locale, "chat.gateTitle")}</DialogTitle>
+            <DialogDescription>{t(locale, "chat.gateBody")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button asChild variant="outline"><Link href={authPath}>{t(locale, "auth.login")}</Link></Button>
+            <Button asChild><Link href={`${authPath}&mode=register`}>{t(locale, "auth.register")}</Link></Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

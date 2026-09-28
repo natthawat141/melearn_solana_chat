@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { AppShell } from "@/components/app-shell";
+import { AppTheme } from "@/components/app-theme";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getViewer } from "@/lib/viewer";
 import "./globals.css";
@@ -18,7 +17,7 @@ export const metadata: Metadata = {
     default: "Melearn Chat",
     template: "%s · Melearn Chat",
   },
-  description: "ครูที่มีคาแรกเตอร์ เรียนรู้ในแบบของคุณ · AI teachers for English and math, with Solana devnet unlocks.",
+  description: "ฝึกอังกฤษและคณิตกับครู AI ที่มีคาแรกเตอร์ ถาม ขอคำใบ้ และลองทำแบบฝึกในจังหวะของคุณ · Learn with MeLearn.",
 };
 
 export const dynamic = "force-dynamic";
@@ -28,11 +27,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang={viewer.locale === "en" ? "en" : "th"} className={cn("font-sans", noto.variable)} suppressHydrationWarning>
       <body className="antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <AppTheme>
           <TooltipProvider>
-            <AppShell locale={viewer.locale}>{children}</AppShell>
+            {children}
           </TooltipProvider>
-        </ThemeProvider>
+        </AppTheme>
       </body>
     </html>
   );
