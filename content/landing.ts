@@ -47,7 +47,7 @@ const th = {
   closing: { title: "เริ่มจากคำถามเล็ก ๆ ของคุณ", body: "ครูเรย์และครูพายพร้อมชวนคุณลองคิด ลองตอบ และเรียนรู้ไปด้วยกัน", action: "เริ่มเรียนฟรี", note: "สมัครบัญชีก่อนแชต · ฟรีในช่วงเดโม" },
   footer: { tagline: "ทุกคำถาม คือจุดเริ่มต้นของการเรียนรู้", note: "AI learning demo", preview: "ตัวอย่างผลิตภัณฑ์ · ไม่มีการเรียกเก็บเงิน" },
   controls: { language: "เปลี่ยนภาษา", light: "ใช้ธีมสว่าง", dark: "ใช้ธีมมืด", error: "เปลี่ยนภาษาไม่สำเร็จ ลองอีกครั้ง" },
-  auth: { title: "ยินดีต้อนรับกลับมา", registerTitle: "เริ่มต้นการเรียนของคุณ", body: "เข้าสู่ระบบเพื่อคุยกับครูและเก็บความคืบหน้า", registerBody: "สร้างบัญชี แล้วเริ่มคุยกับครูเรย์และครูพาย", name: "ชื่อบัญชี", password: "รหัสผ่าน", submit: "เข้าสู่ระบบ", register: "สร้างบัญชีฟรี", pending: "รอสักครู่…", switchLogin: "มีบัญชีแล้ว? เข้าสู่ระบบ", switchRegister: "ยังไม่มีบัญชี? สร้างบัญชีฟรี", back: "กลับหน้าแรก", error: "เชื่อมต่อไม่สำเร็จ ลองอีกครั้ง", note: "ไม่ต้องใช้บัตรเครดิต · ฟรีในช่วงเดโม" },
+  auth: { title: "ยินดีต้อนรับกลับมา", registerTitle: "เริ่มต้นการเรียนของคุณ", body: "เซ็นด้วยกระเป๋า Solana เพื่อคุยกับครูและเก็บความคืบหน้า", registerBody: "สร้างบัญชี แล้วเริ่มคุยกับครูเรย์และครูพาย", name: "ชื่อบัญชี", password: "รหัสผ่าน", submit: "เข้าสู่ระบบ", register: "สร้างบัญชีฟรี", pending: "รอสักครู่…", switchLogin: "มีบัญชีแล้ว? เข้าสู่ระบบ", switchRegister: "ยังไม่มีบัญชี? สร้างบัญชีฟรี", back: "กลับหน้าแรก", error: "เชื่อมต่อไม่สำเร็จ ลองอีกครั้ง", note: "ไม่ต้องใช้บัตรเครดิต · ฟรีในช่วงเดโม" },
 };
 
 const en: typeof th = {
@@ -80,7 +80,7 @@ const en: typeof th = {
   closing: { title: "Start with a little question of your own", body: "Ray and Pi are ready to help you think, try, and learn together.", action: "Start learning for free", note: "Sign up before chatting · Free during the demo" },
   footer: { tagline: "Every question is a beginning.", note: "AI learning demo", preview: "Product preview · No charges" },
   controls: { language: "Change language", light: "Switch to light theme", dark: "Switch to dark theme", error: "Couldn't change language. Please try again." },
-  auth: { title: "Welcome back", registerTitle: "Begin your learning journey", body: "Log in to chat with your teachers and save your progress.", registerBody: "Create an account, then start learning with Ray and Pi.", name: "Account name", password: "Password", submit: "Log in", register: "Create a free account", pending: "Please wait…", switchLogin: "Already have an account? Log in", switchRegister: "New here? Create a free account", back: "Back to home", error: "Couldn't connect. Please try again.", note: "No credit card needed · Free during the demo" },
+  auth: { title: "Welcome back", registerTitle: "Begin your learning journey", body: "Sign with a Solana wallet to chat with your teachers and save your progress.", registerBody: "Create an account, then start learning with Ray and Pi.", name: "Account name", password: "Password", submit: "Log in", register: "Create a free account", pending: "Please wait…", switchLogin: "Already have an account? Log in", switchRegister: "New here? Create a free account", back: "Back to home", error: "Couldn't connect. Please try again.", note: "No credit card needed · Free during the demo" },
 };
 
 export function landingCopy(locale: Locale) {

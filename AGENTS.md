@@ -27,6 +27,7 @@
 - Public and app headers must share `LanguageSwitcher` and `ThemeToggle`. Compose existing `components/ui/button` and `components/ui/dropdown-menu`; do not add a parallel native select or a second settings implementation.
 - Keep action buttons pastel blue with readable dark text. Theme changes should interpolate colors smoothly and respect reduced motion; do not re-enable `disableTransitionOnChange`.
 - Reply in Thai by default and report observed results rather than assumed success.
+- Use https://www.librechat.ai/ as the chat reference. Read `docs/chat-reference.md` before changing chat screens.
 
 # Component workflow
 

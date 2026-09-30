@@ -99,8 +99,8 @@ export function openingMessage(teacher: Teacher, lesson: Lesson, locale: Locale)
   }
   if (teacher.id === "ray") {
     return locale === "en"
-      ? `Hi! I'm Teacher Ray. What English would you like to practice today?\n\n${lesson.opening || "What's your name?"}`
-      : `${teacher.greeting}\n\n${lesson.opening || "ลองทักทายเป็นภาษาอังกฤษได้เลยครับ"}`.trim();
+      ? `Hi, I'm Teacher Ray. Let's practice together.\n\n${lesson.opening || "What would you like to say?"}`
+      : `สวัสดีครับ ครูเรย์เอง วันนี้เรามาฝึก${lesson.title}กันนะครับ\n\n${lesson.opening || "ลองทักทายเป็นภาษาอังกฤษได้เลยครับ"}`;
   }
   return locale === "en" ? teacher.exampleResponse : teacher.greeting;
 }

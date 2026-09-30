@@ -34,6 +34,30 @@ async function broadcast(rpcUrl: string, raw: Uint8Array) {
   return data.result;
 }
 
+export async function signSolanaMessage(message: string) {
+  if (!connected) {
+    const address = await connectSolanaWallet();
+    if (!address || !connected) return null;
+  }
+  const encoded = new TextEncoder().encode(message);
+  const current = connected;
+  if (!current) return null;
+  const feature = current.wallet.features["solana:signMessage"] as
+    | {
+        signMessage: (input: { account: WalletAccount; message: Uint8Array }) => Promise<ReadonlyArray<{ signature: Uint8Array }>>;
+      }
+    | undefined;
+  if (feature) {
+    const [signed] = await feature.signMessage({ account: current.account, message: encoded });
+    return { publicKey: current.account.address, signature: bs58.encode(signed.signature) };
+  }
+  const injected = window.solana?.signMessage ? window.solana : window.solflare?.signMessage ? window.solflare : null;
+  if (!injected?.signMessage) return null;
+  const signed = await injected.signMessage(encoded, "utf8");
+  const signature = signed instanceof Uint8Array ? signed : signed.signature;
+  return { publicKey: current.account.address, signature: bs58.encode(signature) };
+}
+
 export async function connectSolanaWallet() {
   const wallets = getWallets()
     .get()

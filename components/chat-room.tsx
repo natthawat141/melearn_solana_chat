@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, MessageCircle, Wallet } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from "@/components/ui/input-group";
 import { formatWhen } from "@/lib/format";
 import { clearLessonDraft, readLessonDraft, writeLessonDraft } from "@/lib/lesson-draft";
@@ -162,12 +163,14 @@ export function ChatRoom({
       </header>
 
       {isGuest ? (
-          <p className="shrink-0 bg-muted px-4 py-2 text-center text-sm text-muted-foreground md:px-6">
-          {t(locale, "chat.previewBanner")}{" "}
-          <Button variant="link" onClick={() => setAuthOpen(true)}>
-            {t(locale, "auth.register")}
-          </Button>
-        </p>
+        <div className="shrink-0 border-b border-border bg-muted/40 px-4 py-2">
+          <div className="mx-auto flex w-full max-w-[760px] flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <p className="text-sm text-muted-foreground">{t(locale, "chat.previewBanner")}</p>
+            <Button type="button" variant="link" size="sm" className="h-8 shrink-0 px-0" onClick={() => setAuthOpen(true)}>
+              {t(locale, "auth.register")}
+            </Button>
+          </div>
+        </div>
       ) : null}
 
       <div
@@ -187,7 +190,11 @@ export function ChatRoom({
                 <Face teacher={teacher} size={32} />
                 <div className="min-w-0 flex-1 pt-0.5">
                   <p className="text-sm font-semibold leading-none">{teacher.name[locale]}</p>
-                  <p className="mt-2 whitespace-pre-wrap text-[15px] leading-7">{message.text}</p>
+                  <div className="mt-2 space-y-2 text-[15px] leading-7">
+                    {message.text.split(/\n{2,}/).map((paragraph, index) => (
+                      <p key={`${message.id}-${index}`} className="whitespace-pre-wrap">{paragraph}</p>
+                    ))}
+                  </div>
                 </div>
               </article>
             ) : (
@@ -240,7 +247,7 @@ export function ChatRoom({
               <p className="mt-2 text-sm text-muted-foreground">
                 {t(locale, "chat.attempts")}: {progress.attempts} · {t(locale, "chat.hints")}: {progress.hintsUsed}
               </p>
-              <Link href="/learning" className="mt-3 inline-flex min-h-12 items-center font-semibold text-primary">
+              <Link href="/chats" className="mt-3 inline-flex min-h-12 items-center font-semibold text-primary">
                 {t(locale, "chat.next")}
               </Link>
             </section>
@@ -277,7 +284,7 @@ export function ChatRoom({
           ) : null}
           <div className="mb-2 flex flex-wrap gap-2">
             {chipModes.map(([mode, key, icon]) => (
-              <Button key={mode} type="button" variant="outline" disabled={sending || (!isGuest && quota.blocked)} onClick={() => send(mode, "")} className="h-11 min-h-11 rounded-full border-border bg-card px-3 text-sm font-semibold text-primary">
+              <Button key={mode} type="button" variant="outline" size="lg" disabled={sending || (!isGuest && quota.blocked)} onClick={() => send(mode, "")} className="h-11 min-h-11 px-3 text-sm">
                 <Icon name={icon} className="size-4" />
                 {t(locale, key)}
               </Button>
@@ -289,7 +296,7 @@ export function ChatRoom({
               void send("teach", draft);
             }}
           >
-            <InputGroup className="rounded-3xl bg-card">
+            <InputGroup className="rounded-xl bg-card">
               <InputGroupTextarea
                 ref={field}
                 value={draft}
@@ -319,15 +326,33 @@ export function ChatRoom({
         </div>
       </div>
       <Dialog open={authOpen} onOpenChange={setAuthOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t(locale, "chat.gateTitle")}</DialogTitle>
-            <DialogDescription>{t(locale, "chat.gateBody")}</DialogDescription>
+        <DialogContent className="max-w-lg gap-0 overflow-hidden rounded-2xl border-border p-0 shadow-2xl [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:size-9 [&_[data-slot=dialog-close]]:rounded-full">
+          <DialogHeader className="space-y-4 p-6 pr-16 sm:p-8 sm:pr-18">
+            <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
+              <MessageCircle aria-hidden="true" className="size-5" />
+            </div>
+            <DialogTitle className="text-xl font-semibold leading-tight tracking-tight sm:text-2xl">
+              {t(locale, "chat.gateTitle")}
+            </DialogTitle>
+            <DialogDescription className="text-base leading-relaxed">
+              {t(locale, "chat.gateBody")}
+            </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button asChild variant="outline"><Link href={authPath}>{t(locale, "auth.login")}</Link></Button>
-            <Button asChild><Link href={`${authPath}&mode=register`}>{t(locale, "auth.register")}</Link></Button>
-          </DialogFooter>
+          <div className="space-y-3 border-t border-border bg-muted/30 p-5 sm:p-6">
+            <Button asChild className="min-h-12 w-full justify-between whitespace-normal px-4 py-3 text-left text-base">
+              <Link href={authPath}>
+                <span className="flex min-w-0 items-center gap-3">
+                  <Wallet aria-hidden="true" className="size-5 shrink-0" />
+                  <span>{t(locale, "auth.walletAction")}</span>
+                </span>
+                <ArrowRight aria-hidden="true" className="size-5 shrink-0" />
+              </Link>
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">{t(locale, "auth.walletNote")}</p>
+            <DialogClose asChild>
+              <Button className="min-h-10 w-full" variant="ghost">{t(locale, "chat.keepDraft")}</Button>
+            </DialogClose>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

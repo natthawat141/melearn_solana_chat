@@ -136,6 +136,24 @@ export function registerUser(db: AppDatabase, input: { displayName: string; pass
   return findUser(db, id)!;
 }
 
+export function loginWithWallet(db: AppDatabase, input: { publicKey: string; guestId: string; locale: Locale }) {
+  const existing = db.prepare("SELECT * FROM users WHERE wallet_address = ?").get(input.publicKey) as UserRow | undefined;
+  if (existing) {
+    withTransaction(db, () => migrateGuest(db, input.guestId, existing.id));
+    return findUser(db, existing.id)!;
+  }
+  let name = `${input.publicKey.slice(0, 4)}…${input.publicKey.slice(-4)}`;
+  if (findUserByName(db, name)) name = input.publicKey.slice(0, 16);
+  const id = crypto.randomUUID();
+  withTransaction(db, () => {
+    db.prepare(
+      "INSERT INTO users (id, display_name, password_hash, locale, level, goal, onboarded, wallet_address, created_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)",
+    ).run(id, name, hashPassword(crypto.randomBytes(24).toString("hex")), input.locale, input.publicKey, nowIso());
+    migrateGuest(db, input.guestId, id);
+  });
+  return findUser(db, id)!;
+}
+
 export function loginUser(db: AppDatabase, input: { displayName: string; password: string; guestId: string }) {
   const row = findUserByName(db, input.displayName);
   if (!row || !verifyPassword(input.password, row.password_hash)) throw new Error("INVALID");
