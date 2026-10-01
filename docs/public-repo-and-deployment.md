@@ -6,9 +6,12 @@ The competition source is public at https://github.com/natthawat141/melearn_sola
 
 - GitHub remote: `github`; the `origin` remote points to the older Cursor Git service.
 - Cloudflare account: Melearn.vmi. The account ID and intended hostname `chat.melearn.io` are recorded in `cloudflare/deployment-target.json`. That file contains public resource identifiers and ordinary configuration, never secret values. It is a deployment manifest, not a working Wrangler configuration.
-- Cloudflare Secrets Store `melearn-chat` contains the active AI, Tavily, Supadata, and Resend API keys, plus a newly generated production session secret. The names are prefixed `MELEARN_CHAT_` to isolate this application. These secrets are stored remotely but are not yet bound to a running Worker.
+- Cloudflare Secrets Store `melearn-chat` contains the active AI, Tavily, Supadata, and Resend API keys, plus a newly generated production session secret. The names are prefixed `MELEARN_CHAT_` to isolate this application. Their bindings are declared in Wrangler for the private bootstrap Worker.
 - Local `.env.local` and the SQLite database remain private and usable for development. Legacy Supabase/Dynamic/MoonPay credentials were not uploaded because this app no longer uses them.
-- The app has not been deployed to Workers. Domain ownership/DNS configuration has not been verified in this step. SQLite, native image processing, and other runtime dependencies still need the migration described in `docs/cloudflare-migration.md`.
+- D1 `melearn-chat` exists in APAC and all four schema migrations are applied; it is empty and has no imported user records.
+- Worker `melearn-chat` has a bootstrap version uploaded with D1 and Secrets Store bindings. `workers.dev`, preview URLs, and routes are disabled, and Wrangler confirmed no deployment targets. The bootstrap responds with migration-pending if later given a route; it is not the app deployment.
+- R2 is not enabled for the account yet, so `melearn-chat-uploads-prod` is not created and no R2 binding is present. Enabling R2 requires signing into the target Melearn.vmi Cloudflare account in its dashboard; Wrangler returns API error 10042 until then.
+- The app has not been deployed to Workers. `chat.melearn.io` has not been attached. SQLite, native image processing, and other runtime dependencies still need the migration described in `docs/cloudflare-migration.md`.
 
 ## Before publishing source
 

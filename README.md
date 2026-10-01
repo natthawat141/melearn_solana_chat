@@ -42,7 +42,7 @@ Solana devnet transaction checks with `@solana/kit` and Wallet Standard are stil
 
 The live store is SQLite at `data/melearn.db`. A Cloudflare D1 export is prepared in `cloudflare/` and is not the running database. See [docs/cloudflare-migration.md](docs/cloudflare-migration.md).
 
-Public-repo checks, CI, the selected Cloudflare account, and the stored production secrets are documented in [docs/public-repo-and-deployment.md](docs/public-repo-and-deployment.md). GitHub CI checks code without production credentials; deployment will use Cloudflare Workers Builds after the runtime migration.
+Public-repo checks, CI, the selected Cloudflare account, stored production secrets, and current Cloudflare resources are documented in [docs/public-repo-and-deployment.md](docs/public-repo-and-deployment.md). GitHub CI checks code without production credentials; deployment will use Cloudflare Workers Builds after the runtime migration.
 
 ## Demo path
 

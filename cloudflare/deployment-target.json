@@ -3,6 +3,9 @@
   "worker_name": "melearn-chat",
   "production_hostname": "chat.melearn.io",
   "secrets_store_id": "425e455964c1434db8032613229d792d",
+  "database_name": "melearn-chat",
+  "database_id": "07a11351-59de-4c47-a0aa-6d0f900b49ac",
+  "r2_bucket_name": "melearn-chat-uploads-prod",
   "runtime_secret_names": {
     "AI_API_KEY": "MELEARN_CHAT_AI_API_KEY",
     "TAVILY_API_KEY": "MELEARN_CHAT_TAVILY_API_KEY",

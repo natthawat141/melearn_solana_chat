@@ -1,6 +1,6 @@
 # Preparing to move Melearn to Cloudflare
 
-The target the user chose: run the app on Workers, use D1 for accounts, history, and progress, R2 for images, and Workers AI for replies, and bring the existing data along. The user selected the Melearn.vmi account and `chat.melearn.io`. Runtime keys and a production session secret are now stored in Cloudflare Secrets Store; see `docs/public-repo-and-deployment.md`. D1/R2 and the app Worker have not been created in this work, and the app has not been deployed.
+The target the user chose: run the app on Workers, use D1 for accounts, history, and progress, R2 for images, and Workers AI for replies, and bring the existing data along. The user selected the Melearn.vmi account and `chat.melearn.io`. Runtime keys and a production session secret are now stored in Cloudflare Secrets Store; see `docs/public-repo-and-deployment.md`. D1 is created in APAC with its schema applied. A route-free bootstrap Worker version was uploaded with D1 and Secrets Store bindings; Cloudflare reported no deployment targets. R2 remains unavailable until it is enabled for the account in the Cloudflare Dashboard. The application itself is not deployed; see `cloudflare/wrangler.jsonc` and `cloudflare/bootstrap-worker.mjs`.
 
 ## What is already prepared
 
