@@ -18,6 +18,12 @@
       "migrations_dir": "./migrations"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "melearn-chat-uploads-prod"
+    }
+  ],
   "secrets_store_secrets": [
     {
       "binding": "AI_API_KEY",

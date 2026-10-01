@@ -10,7 +10,7 @@ The competition source is public at https://github.com/natthawat141/melearn_sola
 - Local `.env.local` and the SQLite database remain private and usable for development. Legacy Supabase/Dynamic/MoonPay credentials were not uploaded because this app no longer uses them.
 - D1 `melearn-chat` exists in APAC and all four schema migrations are applied; it is empty and has no imported user records.
 - Worker `melearn-chat` has a bootstrap version uploaded with D1 and Secrets Store bindings. `workers.dev`, preview URLs, and routes are disabled, and Wrangler confirmed no deployment targets. The bootstrap responds with migration-pending if later given a route; it is not the app deployment.
-- R2 is not enabled for the account yet, so `melearn-chat-uploads-prod` is not created and no R2 binding is present. Enabling R2 requires signing into the target Melearn.vmi Cloudflare account in its dashboard; Wrangler returns API error 10042 until then.
+- R2 bucket `melearn-chat-uploads-prod` exists in APAC and is bound to the bootstrap Worker as `UPLOADS`.
 - The app has not been deployed to Workers. `chat.melearn.io` has not been attached. SQLite, native image processing, and other runtime dependencies still need the migration described in `docs/cloudflare-migration.md`.
 
 ## Before publishing source
