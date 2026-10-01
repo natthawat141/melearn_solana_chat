@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useState } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { landingCopy } from "@/content/landing";
 import type { Locale } from "@/lib/types";
 
@@ -27,11 +26,6 @@ export function MarketingHeader({ locale, signedIn }: { locale: Locale; signedIn
         </nav>
         <div className="m-header-actions">
           <LanguageSwitcher locale={locale} />
-          <ThemeToggle
-            label={locale === "th" ? "ธีม" : "Theme"}
-            lightLabel={locale === "th" ? "ใช้ธีมสว่าง" : "Use light theme"}
-            darkLabel={locale === "th" ? "ใช้ธีมมืด" : "Use dark theme"}
-          />
           <span className="m-header-divider" aria-hidden="true" />
           {!signedIn && <Link className="m-login-link" href="/login">{copy.nav.login}</Link>}
           <Link className="m-button m-button-small m-header-cta" href="/app">

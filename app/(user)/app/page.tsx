@@ -68,7 +68,7 @@ export default async function HomePage() {
                 <CardContent>
                   <p className="line-clamp-3">{teacherPersona(item, viewer.locale)}</p>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="mt-auto">
                   {item.mvpEnabled ? (
                     <Button asChild className="min-h-11">
                       <Link href={`/teachers/${item.id}`}>{t(viewer.locale, "home.pick")}</Link>

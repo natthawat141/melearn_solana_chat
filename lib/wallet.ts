@@ -34,9 +34,9 @@ async function broadcast(rpcUrl: string, raw: Uint8Array) {
   return data.result;
 }
 
-export async function signSolanaMessage(message: string) {
+export async function signSolanaMessage(message: string, preferredName?: "phantom" | "solflare") {
   if (!connected) {
-    const address = await connectSolanaWallet();
+    const address = await connectSolanaWallet(preferredName);
     if (!address || !connected) return null;
   }
   const encoded = new TextEncoder().encode(message);
@@ -51,18 +51,22 @@ export async function signSolanaMessage(message: string) {
     const [signed] = await feature.signMessage({ account: current.account, message: encoded });
     return { publicKey: current.account.address, signature: bs58.encode(signed.signature) };
   }
-  const injected = window.solana?.signMessage ? window.solana : window.solflare?.signMessage ? window.solflare : null;
+  const injected = preferredName === "solflare" ? window.solflare
+    : preferredName === "phantom" ? window.solana
+    : window.solana?.signMessage ? window.solana : window.solflare;
   if (!injected?.signMessage) return null;
   const signed = await injected.signMessage(encoded, "utf8");
   const signature = signed instanceof Uint8Array ? signed : signed.signature;
   return { publicKey: current.account.address, signature: bs58.encode(signature) };
 }
 
-export async function connectSolanaWallet() {
+export async function connectSolanaWallet(preferredName?: "phantom" | "solflare") {
   const wallets = getWallets()
     .get()
     .filter((wallet) => wallet.chains.some((chain) => chain.startsWith("solana:")));
-  const wallet = wallets.find((item) => /phantom|solflare/i.test(item.name)) ?? wallets[0];
+  const wallet = preferredName
+    ? wallets.find((item) => item.name.toLowerCase().includes(preferredName))
+    : wallets.find((item) => !/phantom|solflare/i.test(item.name)) ?? wallets[0];
   const connect = wallet?.features["standard:connect"] as { connect: () => Promise<{ accounts: readonly WalletAccount[] }> } | undefined;
   if (!wallet || !connect) return null;
   const { accounts } = await connect.connect();

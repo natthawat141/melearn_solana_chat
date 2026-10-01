@@ -7,7 +7,18 @@ interface SolanaProvider {
   signAndSendTransaction?: (transaction: unknown) => Promise<{ signature: string }>;
 }
 
+interface Eip1193Provider {
+  isMetaMask?: boolean;
+  request: (request: { method: string; params?: unknown[] }) => Promise<unknown>;
+}
+
+interface Eip6963ProviderDetail {
+  info: { name: string; rdns: string };
+  provider: Eip1193Provider;
+}
+
 interface Window {
   solana?: SolanaProvider;
   solflare?: SolanaProvider;
+  ethereum?: Eip1193Provider & { providers?: Eip1193Provider[] };
 }

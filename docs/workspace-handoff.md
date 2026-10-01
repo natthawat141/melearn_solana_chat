@@ -1,16 +1,16 @@
-# ส่งต่องานให้ AI: ใช้โปรเจกต์ชุดเดียว
+# Handoff: one project checkout
 
-อ่านเอกสารนี้ร่วมกับ `AGENTS.md` ก่อนแก้ไฟล์หรือเปิดพรีวิว
+Read this with `AGENTS.md` before editing files or opening a preview.
 
-## โฟลเดอร์หลัก
+## Canonical folder
 
 ```text
 /Volumes/Extreme SSD/bill_dev/melearn_solana_chat
 ```
 
-พาธซ้อน `melearn_solana_chat/melearn_solana_chat` เป็น symlink กลับมายังโฟลเดอร์หลัก เพื่อรองรับเครื่องมือที่จำพาธเก่า ไม่ใช่โปรเจกต์อีกชุด ห้ามแทนที่ด้วย directory, clone หรือสำเนาใหม่ และห้ามเดินผ่าน symlink แบบ recursive
+The nested path `melearn_solana_chat/melearn_solana_chat` is a symlink back to the root so tools that remember the old path still open this checkout. It is not a second project. Do not replace it with a directory, clone, or new copy, and do not walk the symlink recursively.
 
-ก่อนเริ่มงานตรวจ:
+Before starting work, check:
 
 ```bash
 pwd -P
@@ -18,46 +18,46 @@ git rev-parse --show-toplevel
 git status --short
 ```
 
-สองคำสั่งแรกต้องระบุโฟลเดอร์จริงเดียวกันตามพาธด้านบน รักษางานที่ยังไม่ commit ไว้ ถ้า SSD ไม่ได้ mount ให้หยุดการแก้ repository อย่าสร้าง directory ทดแทนใต้ `/Volumes`
+The first two commands must both name the physical folder above. Keep uncommitted work. If the SSD is not mounted, stop editing the repository. Do not create a replacement directory under `/Volumes`.
 
-## เหตุการณ์ที่แก้เมื่อ 27 กันยายน 2026
+## What was fixed on 27 September 2026
 
-มี Git repository สองชุดซ้อนกัน ชุดหลักมี landing ใหม่ แต่ชุดด้านในยังมีหน้าเก่า พบ preview พอร์ต 43123 รันจากชุดด้านใน และตัวทำงานของ Cursor ชี้พาธนั้น จึงแสดงหน้าเก่าทั้งที่โค้ดใหม่ยังอยู่ในชุดหลัก ไม่มีหลักฐานยืนยันว่า AI ตัวใดเป็นผู้สร้างสำเนาหรือสลับเซิร์ฟเวอร์
+Two Git repositories were nested. The outer one had the new landing page; the inner one still had the old pages. The preview on port 43123 was running from the inner copy, and the Cursor workspace pointed there, so the old UI showed even though the new code was in the outer checkout. There is no evidence that identifies which AI created the copy or switched the server.
 
-ย้ายสำเนาทั้ง directory พร้อม Git, งานที่ยังไม่ commit, environment files และข้อมูลเดิมไปเก็บที่:
+The whole inner directory, including Git, uncommitted work, environment files, and the previous data, was moved to:
 
 ```text
 /Volumes/Extreme SSD/bill_dev_archives/melearn_solana_chat-duplicate-20260927-160150
 ```
 
-ใช้เพื่อกู้คืนเท่านั้น ห้ามเปิดเป็นโปรเจกต์ทำงานหรือรันเซิร์ฟเวอร์จากที่นั่น ห้ามนำฐานข้อมูลหรือ environment files ทับชุดหลักโดยอัตโนมัติ
+Use that only to recover something. Do not open it as the working project or run a server from there. Do not copy its database or environment files over the active project automatically.
 
-## วิธีรันและตรวจพรีวิว
+## How to run and check the preview
 
-ใช้ `npm run dev` ระหว่างแก้ UI เพื่อให้หน้าอัปเดตตามโค้ด หากต้องการ production preview ให้หยุด dev แล้วใช้ `npm run build` และ `npm start`
+Use `npm run dev` while editing UI so the page follows the code. For a production preview, stop the dev server, then use `npm run build` and `npm start`.
 
-ทั้ง dev และ start ใช้ `scripts/run-next.mjs` ซึ่ง resolve โฟลเดอร์จริงของ script, ยึด root เป็น working directory, ปฏิเสธ repository ที่ซ้อนภายใน และตรวจพอร์ต 43123 ก่อนรัน เปิดดูที่ `http://127.0.0.1:43123/`
+Both dev and start go through `scripts/run-next.mjs`, which resolves the real directory of the script, uses the repository root as the working directory, refuses a repository nested inside itself, and checks port 43123 before starting. Open `http://127.0.0.1:43123/`.
 
-ห้ามเรียก `next dev` หรือ `next start` ตรง ๆ เพื่อข้ามตัวตรวจ ห้ามเปิด dev กับ production preview พร้อมกันหรือแอบย้ายไปพอร์ตอื่น
+Do not call `next dev` or `next start` directly to skip that check. Do not run the dev server and the production preview at the same time, and do not quietly move to another port.
 
-ถ้าหน้าดูเหมือนเวอร์ชันเก่า:
+If the page looks like an old version:
 
-1. ตรวจพาธจริงและสถานะ Git ก่อนเปลี่ยนโค้ด
-2. ตรวจพอร์ตด้วย `lsof -nP -iTCP:43123 -sTCP:LISTEN`
-3. ใช้ PID ที่พบตรวจ directory ด้วย `lsof -a -p <PID> -d cwd` ไม่ต้องพิมพ์ command line หรือ environment ที่อาจมี secrets
-4. หากรันผิด directory ให้หยุดเฉพาะ preview ที่ผิด แล้วรัน `npm run dev` จากชุดหลัก ห้าม kill Node/editor ทั้งหมด
-5. หากใช้ production build เก่า ให้เปลี่ยนเป็น dev หรือ build ใหม่ตามงาน แล้ว reload และตรวจสิ่งที่เปลี่ยนสั้น ๆ
+1. Check the real path and Git status before changing code.
+2. Check the port with `lsof -nP -iTCP:43123 -sTCP:LISTEN`.
+3. Use the PID you found to check its directory with `lsof -a -p <PID> -d cwd`. Do not print the command line or environment, which may contain secrets.
+4. If it is running from the wrong directory, stop only that preview, then run `npm run dev` from the canonical root. Do not kill every Node or editor process.
+5. If an old production build is being served, switch to dev or rebuild for the task, then reload and check the change briefly.
 
-อย่าแก้ด้วยการ reset Git, ลบงานค้าง, restore หน้าเก่า หรือสร้าง repository เพิ่ม
+Do not fix this by resetting Git, deleting uncommitted work, restoring old pages, or creating another repository.
 
-## โค้ดและข้อกำหนดที่ต้องรักษา
+## Code and rules to keep
 
-- `app/(public)/`: landing, login, pricing; `app/(user)/`: พื้นที่เรียนและบัญชี
-- `components/landing/` และ `content/landing.ts`: UI และเนื้อหาสาธารณะ
-- ผู้เยี่ยมชมดู mockup ได้ แต่แชตจริงและส่งคำตอบต้อง login ทั้งหน้าเว็บและ API
-- Pro เป็นราคาและสิทธิ์ตัวอย่าง ยังไม่มีการขายหรือชำระเงิน
-- ใช้โลโก้รูปเดิมใน navbar/footer ไม่มีชื่อ Melearn ที่พิมพ์แยกข้างโลโก้
-- Hero ใหญ่มีพื้นหลังและบทสนทนาสาธิตคณิต โทนฟ้าอ่อน–ขาว ไม่มีสีเหลืองตกแต่ง
-- ห้ามใช้ impeccable และห้ามป้ายตกแต่งเหนือหัวข้อ เช่น “พื้นที่เล็ก ๆ สำหรับความสงสัยของคุณ”
+- `app/(public)/`: landing, login, pricing; `app/(user)/`: classroom and account
+- `components/landing/` and `content/landing.ts`: public UI and copy
+- A visitor can see a mockup, but a real chat and a submitted answer require login, both in the page and in the API
+- Pro is sample pricing and sample benefits. There is no sale and no payment
+- Use the original image logo in the navbar and footer, with no separate printed Melearn name beside it
+- The large hero keeps its background and the math conversation demo. The tone is light blue and white, with no yellow decoration
+- Do not use impeccable, and do not add decorative labels above headings, such as “พื้นที่เล็ก ๆ สำหรับความสงสัยของคุณ”
 
-เอกสารนี้เป็นคำสั่งสำหรับ agent ไม่ใช่กลไกบังคับทุกเครื่องมือ ตัวตรวจตอนรันช่วยป้องกันเมื่อใช้ npm scripts ที่กำหนดไว้
+This document is an instruction for agents. It is not a lock that every tool enforces. The check at startup helps when the defined npm scripts are used.

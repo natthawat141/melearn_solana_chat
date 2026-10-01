@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, MessageCircle, Wallet } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { MessageMarkdown } from "@/components/message-markdown";
 import { Icon } from "@/components/icon";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from "@/components/ui/input-group";
 import { formatWhen } from "@/lib/format";
 import { clearLessonDraft, readLessonDraft, writeLessonDraft } from "@/lib/lesson-draft";
@@ -89,7 +90,7 @@ export function ChatRoom({
     const node = field.current;
     if (!node) return;
     node.style.height = "0px";
-    node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
+    node.style.height = `${Math.min(node.scrollHeight, 128)}px`;
   }, [draft]);
 
   async function send(mode: ChatMode, text: string, clientMessageId?: string) {
@@ -149,14 +150,14 @@ export function ChatRoom({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col bg-background">
-      <header className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2 md:px-5">
+      <header className="flex shrink-0 items-center gap-2 border-b border-border px-2 py-1 md:px-5 md:py-2">
         <Link href={`/teachers/${teacher.id}`} className="grid size-11 shrink-0 place-items-center rounded-full text-primary" aria-label={t(locale, "common.back")}>
           <Icon name="back" />
         </Link>
         <Face teacher={teacher} size={40} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold leading-tight">{teacher.name[locale]}</p>
-          <p className="truncate text-sm text-muted-foreground">
+          <p className="truncate text-xs text-muted-foreground md:text-sm">
             {t(locale, "teacher.ai")} · {lessonTitle(lesson, locale)}
           </p>
         </div>
@@ -183,23 +184,19 @@ export function ChatRoom({
           if (near) setUnseen(false);
         }}
       >
-        <div className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-4 py-6 md:px-6">
+        <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 px-4 py-4 md:gap-6 md:px-6 md:py-6">
           {messages.map((message) =>
             message.role === "assistant" ? (
               <article key={message.id} className="flex gap-3">
-                <Face teacher={teacher} size={32} />
+                <div className="hidden md:block"><Face teacher={teacher} size={32} /></div>
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <p className="text-sm font-semibold leading-none">{teacher.name[locale]}</p>
-                  <div className="mt-2 space-y-2 text-[15px] leading-7">
-                    {message.text.split(/\n{2,}/).map((paragraph, index) => (
-                      <p key={`${message.id}-${index}`} className="whitespace-pre-wrap">{paragraph}</p>
-                    ))}
-                  </div>
+                  <p className="hidden text-sm font-semibold leading-none md:block">{teacher.name[locale]}</p>
+                  <div className="md:mt-2"><MessageMarkdown text={message.text} /></div>
                 </div>
               </article>
             ) : (
               <article key={message.id} className="flex justify-end">
-                <p className="max-w-[min(100%,32rem)] whitespace-pre-wrap rounded-[18px] bg-secondary px-4 py-2.5 text-[15px] leading-7 text-secondary-foreground">
+                <p className="max-w-[min(100%,32rem)] whitespace-pre-wrap rounded-[18px] bg-secondary px-4 py-2.5 text-[15px] leading-6 text-secondary-foreground">
                   <span className="sr-only">{t(locale, "chat.you")}: </span>
                   {userText(message.text)}
                 </p>
@@ -208,9 +205,9 @@ export function ChatRoom({
           )}
           {sending ? (
             <article className="flex gap-3" aria-hidden>
-              <Face teacher={teacher} size={32} />
+              <div className="hidden md:block"><Face teacher={teacher} size={32} /></div>
               <div className="min-w-0 flex-1 pt-0.5">
-                <p className="text-sm font-semibold leading-none">{teacher.name[locale]}</p>
+                <p className="hidden text-sm font-semibold leading-none md:block">{teacher.name[locale]}</p>
                 <p className="mt-2 text-sm text-muted-foreground">{t(locale, "chat.thinking")}</p>
               </div>
             </article>
@@ -282,9 +279,9 @@ export function ChatRoom({
                 : `${t(locale, "quota.left")} ${quota.remaining}/${quota.limit} ${t(locale, "quota.prompts")}`}
             </p>
           ) : null}
-          <div className="mb-2 flex flex-wrap gap-2">
+          <div className="mb-1 grid grid-cols-3 gap-1 md:mb-2 md:flex md:gap-2">
             {chipModes.map(([mode, key, icon]) => (
-              <Button key={mode} type="button" variant="outline" size="lg" disabled={sending || (!isGuest && quota.blocked)} onClick={() => send(mode, "")} className="h-11 min-h-11 px-3 text-sm">
+              <Button key={mode} type="button" variant="ghost" size="sm" disabled={sending || (!isGuest && quota.blocked)} onClick={() => send(mode, "")} className="h-11 min-w-0 gap-1.5 px-1 text-xs md:gap-2 md:px-3 md:text-sm">
                 <Icon name={icon} className="size-4" />
                 {t(locale, key)}
               </Button>
@@ -310,49 +307,47 @@ export function ChatRoom({
                 rows={1}
                 maxLength={4000}
                 aria-label={t(locale, "chat.placeholder")}
-                className="max-h-40 min-h-12 px-4 pt-3.5 text-[15px] leading-6 [field-sizing:fixed] md:text-[15px]"
+                className="max-h-32 min-h-12 px-3 py-3 text-base leading-6 [field-sizing:fixed] md:text-[15px]"
               />
-              <InputGroupAddon align="block-end" className="justify-between">
-                <p className={`text-xs ${draft.length > 2000 ? "text-destructive" : "text-muted-foreground"} ${draft.length >= 1600 ? "" : "invisible"}`} aria-hidden={draft.length < 1600}>
-                  {draft.length}/2000
-                </p>
+              <InputGroupAddon align="inline-end" className="self-end py-1">
                 <InputGroupButton type="submit" size="icon-sm" variant="default" disabled={sending || (!isGuest && quota.blocked) || !draft.trim()} className="size-11 rounded-full" aria-label={t(locale, "chat.send")}>
                   <Icon name="send" />
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
           </form>
+          {draft.length >= 1600 ? <p className={`pt-1 text-right text-xs ${draft.length > 2000 ? "text-destructive" : "text-muted-foreground"}`}>{draft.length}/2000</p> : null}
           <p className="px-2 pt-2 text-center text-xs text-muted-foreground">{t(locale, "chat.aiNotice")}</p>
         </div>
       </div>
       <Dialog open={authOpen} onOpenChange={setAuthOpen}>
-        <DialogContent className="max-w-lg gap-0 overflow-hidden rounded-2xl border-border p-0 shadow-2xl [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:size-9 [&_[data-slot=dialog-close]]:rounded-full">
-          <DialogHeader className="space-y-4 p-6 pr-16 sm:p-8 sm:pr-18">
-            <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
-              <MessageCircle aria-hidden="true" className="size-5" />
-            </div>
-            <DialogTitle className="text-xl font-semibold leading-tight tracking-tight sm:text-2xl">
+        <DialogContent className="gap-5 p-5 sm:max-w-[400px]">
+          <DialogHeader className="gap-3">
+            <DialogTitle className="pr-6 text-xl leading-snug">
               {t(locale, "chat.gateTitle")}
             </DialogTitle>
-            <DialogDescription className="text-base leading-relaxed">
+            <DialogDescription className="leading-relaxed">
               {t(locale, "chat.gateBody")}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 border-t border-border bg-muted/30 p-5 sm:p-6">
-            <Button asChild className="min-h-12 w-full justify-between whitespace-normal px-4 py-3 text-left text-base">
+          <div className="flex min-w-0 items-center gap-3 rounded-lg bg-muted/50 p-3">
+            <Face teacher={teacher} size={40} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{teacher.name[locale]}</p>
+              <p className="break-words text-sm text-muted-foreground">{lessonTitle(lesson, locale)}</p>
+            </div>
+          </div>
+          <DialogFooter className="-mx-5 -mb-5 flex-col gap-2 p-5 sm:flex-col">
+            <Button asChild className="min-h-11 w-full">
               <Link href={authPath}>
-                <span className="flex min-w-0 items-center gap-3">
-                  <Wallet aria-hidden="true" className="size-5 shrink-0" />
-                  <span>{t(locale, "auth.walletAction")}</span>
-                </span>
-                <ArrowRight aria-hidden="true" className="size-5 shrink-0" />
+                {t(locale, "auth.login")}
+                <ArrowRight data-icon="inline-end" aria-hidden="true" />
               </Link>
             </Button>
-            <p className="text-center text-sm text-muted-foreground">{t(locale, "auth.walletNote")}</p>
             <DialogClose asChild>
-              <Button className="min-h-10 w-full" variant="ghost">{t(locale, "chat.keepDraft")}</Button>
+              <Button className="min-h-11 w-full" variant="outline">{t(locale, "chat.keepDraft")}</Button>
             </DialogClose>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

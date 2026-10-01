@@ -1,17 +1,17 @@
-# ต้นแบบส่วนแชต
+# Chat layout reference
 
-วันที่: 28 กันยายน 2026
+Date: 28 September 2026
 
-ใช้ https://www.librechat.ai/ เป็นต้นแบบส่วนแชต
+Use https://www.librechat.ai/ as the reference for the chat area.
 
-ประวัติแชตอยู่ด้านล่างของ Sidebar จาก shadcn ในแถบเดียวกับเมนูแอป เมนูแอปอยู่ด้านบน ไม่เขียนแถบประวัติแยกเอง
+Chat history sits at the bottom of the shadcn Sidebar, in the same bar as the app menu. The app menu stays at the top. Do not build a separate history bar.
 
-ยึดโครงที่เห็นในห้องแชตของไซต์นั้น:
+Follow the structure visible in that site's chat room:
 
-- แถบประวัติอยู่ทางซ้ายของห้องสนทนา
-- แชตใหม่
-- ค้นหาแชต
-- จัดกลุ่มตามวัน: วันนี้, เมื่อวาน, 7 วันที่ผ่านมา, 30 วันที่ผ่านมา, เก่ากว่านั้น
-- บนมือถือเปิดประวัติจากแผงด้านข้าง
+- History is on the left of the conversation
+- New chat
+- Search chats
+- Group by day: today, yesterday, previous 7 days, previous 30 days, older
+- On a phone, open history from the side panel
 
-ครู บทเรียน โควต้า และขั้นสมัครก่อนข้อความแรกยังเป็นของ Melearn ต้นแบบนี้ใช้กับโครงแชตที่ผู้ใช้เห็น ไม่ใช่การยก agents, MCP หรือตัวรันโค้ดของ LibreChat มาทั้งก้อน
+Teachers, lessons, quota, and the sign-in step before the first message stay Melearn's. This reference is for the chat layout the user sees. It is not a request to bring over LibreChat's agents, MCP, or code runner.

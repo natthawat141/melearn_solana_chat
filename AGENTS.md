@@ -24,7 +24,7 @@
 - Keep the original image logo in the public navbar and footer, without a separate Melearn text wordmark.
 - Keep the landing bright light blue and white, with restrained dark text/shadows; no yellow decoration. Preserve the large illustrated math-conversation hero unless the user asks to change it.
 - Keep verification proportional to the change; the user prefers a brief visual check for small UI edits.
-- Public and app headers must share `LanguageSwitcher` and `ThemeToggle`. Compose existing `components/ui/button` and `components/ui/dropdown-menu`; do not add a parallel native select or a second settings implementation.
+- Landing navigation uses `components/landing/marketing-header.tsx`; app navigation uses `components/app-shell.tsx`. Keep these navigation components separate. Landing navigation must not render a theme toggle; `ThemeToggle` belongs in the app header. Reuse `LanguageSwitcher` and existing `components/ui/button` and `components/ui/dropdown-menu` primitives; do not add a parallel native select or a second settings implementation.
 - Keep action buttons pastel blue with readable dark text. Theme changes should interpolate colors smoothly and respect reduced motion; do not re-enable `disableTransitionOnChange`.
 - Reply in Thai by default and report observed results rather than assumed success.
 - Use https://www.librechat.ai/ as the chat reference. Read `docs/chat-reference.md` before changing chat screens.
@@ -33,8 +33,10 @@
 
 - The user paused implementation and requested a detailed handoff plan only. Do not continue coding from that planning request. Partial changes made before the interruption are unaccepted work in progress; review them against `docs/interior-ui-plan.md` when a separate development task is assigned.
 
-- Before writing UI, inventory `components/ui` and run `npx shadcn@latest info --json`. Reuse existing shadcn components first.
-- If a suitable component is missing, read its official docs and add it through `npx shadcn@latest add <component>`. Do not overwrite customized components or reinstall the preset.
-- Only write custom UI when an appropriate existing/registry component cannot meet the requirement; document why. Compose business behavior around library components rather than recreating controls.
+- **Mandatory for every agent and delegated agent: load and reuse components before creating UI.** Inventory `components/ui` and shared business components, read the relevant implementations, and run `npx shadcn@latest info --json` before writing UI.
+- If an installed component or block meets the requirement, import and compose it. Do not create a parallel control, copy, or visual imitation.
+- If nothing installed is suitable, search the official/library registry, read its docs, and load the source with `npx shadcn@latest view <registry-item>`. Add missing components through `npx shadcn@latest add <component>` before using them. Do not overwrite customized components or reinstall the preset.
+- Create custom UI only after confirming no existing or registry component can meet the requirement. Record what was checked and why it cannot be reused in the handoff. Compose business behavior around library components rather than recreating controls.
+- Include this components-first workflow in every delegated UI task. Tool-specific instruction files must reference this root `AGENTS.md` as the canonical rule; do not maintain competing copies.
 - Login/register and setup use shadcn Card, Field, Input, Button, ToggleGroup, Alert, and Spinner. Use semantic theme tokens, never fixed white surfaces that break dark mode.
 - Read `docs/interior-ui-plan.md` before changing application pages. The landing design is accepted; preserve it except for links needed by the agreed access flow.

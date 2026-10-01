@@ -163,6 +163,9 @@ export async function handleMessage(
     mode: ChatMode;
     locale: Locale;
     level: string | null;
+    educationStage?: string | null;
+    preferredSubject?: string | null;
+    goal?: string | null;
   },
 ) {
   if (!/^[A-Za-z0-9_-]{8,80}$/.test(input.clientMessageId)) throw new LearningError("BAD_MESSAGE_ID", 400);
@@ -205,6 +208,9 @@ export async function handleMessage(
       lesson,
       locale: input.locale,
       level: input.level,
+      educationStage: input.educationStage,
+      preferredSubject: input.preferredSubject,
+      goal: input.goal,
       history: historyFor(prior),
       text,
     });

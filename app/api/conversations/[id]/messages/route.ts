@@ -29,6 +29,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       mode: body.mode,
       locale: viewer.locale,
       level: viewer.level,
+      educationStage: viewer.user.educationStage,
+      preferredSubject: viewer.user.preferredSubject,
+      goal: viewer.goal,
     });
     return NextResponse.json(result);
   } catch (error) {

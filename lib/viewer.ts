@@ -4,7 +4,7 @@ import { findUser, readSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { nowIso } from "@/lib/format";
 import type { Account } from "@/lib/auth";
-import type { Locale } from "@/lib/types";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/types";
 
 export type Viewer = {
   user: Account | null;
@@ -26,19 +26,24 @@ type GuestRow = {
 };
 
 function asLocale(value: string | null | undefined): Locale {
-  return value === "en" ? "en" : "th";
+  return value === "th" ? "th" : DEFAULT_LOCALE;
+}
+
+const GUEST_ID_RE = /^[a-zA-Z0-9_-]{1,64}$/;
+
+function sanitizeGuestId(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  return GUEST_ID_RE.test(trimmed) ? trimmed : null;
 }
 
 export async function getViewer(): Promise<Viewer> {
   const db = getDb();
   const jar = await cookies();
   const headerStore = await headers();
-  const guestId = headerStore.get("x-guest-id") || jar.get("ml_guest")?.value || crypto.randomUUID();
-  let guest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId) as GuestRow | undefined;
-  if (!guest) {
-    db.prepare("INSERT INTO guests (id, locale, level, goal, onboarded, created_at) VALUES (?, 'th', NULL, NULL, 0, ?)").run(guestId, nowIso());
-    guest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId) as GuestRow;
-  }
+  const rawGuestId = headerStore.get("x-guest-id") || jar.get("ml_guest")?.value;
+  const guestId = sanitizeGuestId(rawGuestId) || crypto.randomUUID();
+
   const userId = readSession(jar.get("ml_session")?.value);
   const user = userId ? findUser(db, userId) : null;
   if (user) {
@@ -52,6 +57,12 @@ export async function getViewer(): Promise<Viewer> {
       goal: user.goal,
       onboarded: user.onboarded,
     };
+  }
+
+  let guest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId) as GuestRow | undefined;
+  if (!guest) {
+    db.prepare("INSERT INTO guests (id, locale, level, goal, onboarded, created_at) VALUES (?, 'en', NULL, NULL, 0, ?)").run(guestId, nowIso());
+    guest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId) as GuestRow;
   }
   return {
     user: null,

@@ -1,67 +1,75 @@
 # Melearn Chat
 
-สำหรับ AI หรือผู้รับงานต่อ: อ่าน [AGENTS.md](AGENTS.md) และ [ข้อกำหนด workspace / วิธีตรวจพรีวิว](docs/workspace-handoff.md) ก่อนเริ่มงาน
+For an AI agent or the next person taking over this work, read [AGENTS.md](AGENTS.md) and the [workspace handoff](docs/workspace-handoff.md) before starting.
 
-แผนปรับ UX/UI ภายในและ flow guest/auth/setup: [docs/interior-ui-plan.md](docs/interior-ui-plan.md) เป็นแผนส่งต่อ ไม่ใช่งานที่ตรวจรับว่า implement เสร็จแล้ว
+The interior UX plan and the guest, auth, and setup flow are in [docs/interior-ui-plan.md](docs/interior-ui-plan.md). That file is a handoff plan, not a claim that the work is finished.
 
-ครูที่มีคาแรกเตอร์ สำหรับเดโม Solana Colosseum รอบนี้เปิดครูเรย์ (ภาษาอังกฤษ) และครูพาย (คณิตศาสตร์) ให้คุย ขอคำใบ้ ขอตัวอย่าง ทำแบบฝึก แล้วเก็บความคืบหน้า ส่วนโนวา บิต และไทม์โชว์เป็นเร็ว ๆ นี้
+The running shape of the app is in [docs/architecture.md](docs/architecture.md). Open [docs/melearn-architecture.html](docs/melearn-architecture.html) in a browser for the diagram.
 
-ช่วงเดโมทุกบทเรียนเปิดให้เรียนฟรี ไม่มีการตัดเงิน บัญชีหนึ่งส่งได้ 10 ข้อความใน 24 ชั่วโมง ครบแล้วรอให้โควตารีโหลด ผู้เยี่ยมชมดู landing page และตัวอย่างการเรียนได้ แต่ต้องเข้าสู่ระบบก่อนแชตจริง แพ็กเกจ Pro ใน landing page เป็นเนื้อหาตัวอย่าง ยังไม่เปิดขาย
+Character teachers for this Solana Colosseum demo. Ray (English) and Pi (mathematics) are available to chat, ask for a hint, ask for an example, practice, and save progress. Nova, Bit, and Time are shown as coming soon.
 
-## รันในเครื่อง
+During the demo every lesson is free. Nothing is charged. One account can send 10 messages in 24 hours, then waits for the quota to reload. Visitors can see the landing page and a lesson preview, and must sign in before a real chat. The Pro package on the landing page is sample content and is not for sale.
 
-ต้องใช้ Node.js 22 ขึ้นไป
+## Run locally
 
-โปรเจกต์ที่ใช้งานมีชุดเดียวที่ `/Volumes/Extreme SSD/bill_dev/melearn_solana_chat` พาธซ้อน `melearn_solana_chat/` เป็น symlink กลับมายังชุดหลักเพื่อรองรับเครื่องมือที่จำพาธเดิม ไม่ใช่สำเนาอีกเวอร์ชัน ห้าม clone หรือคัดลอกโปรเจกต์ซ้อนเข้าไปอีก
+Node.js 22 or newer is required.
+
+There is one active project, at `/Volumes/Extreme SSD/bill_dev/melearn_solana_chat`. The nested `melearn_solana_chat/` path is a symlink back to that root so tools that remember the old path still land in the same checkout. It is not a second copy. Do not clone or copy the project inside itself.
 
 ```bash
 npm install
 npm run dev
 ```
 
-เปิด [http://127.0.0.1:43123](http://127.0.0.1:43123)
+Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
-`npm run dev` และ `npm start` ยึดโฟลเดอร์หลักเสมอ และหยุดพร้อมแจ้งข้อผิดพลาดถ้าพอร์ต 43123 ถูกใช้แล้ว ใช้ `npm run dev` ระหว่างแก้ UI เพื่อให้หน้าเว็บอัปเดตตามโค้ดโดยไม่ต้อง build ใหม่
+Google sign-in uses Firebase Authentication. Enable the Google provider and authorize the local hostname used by the browser (`localhost` or `127.0.0.1`) in Firebase Authentication settings. Add the production hostname there before launch.
 
-สำเนาเดิมพร้อม Git, งานที่ยังไม่ commit, `.env.local` และข้อมูลเดิมเก็บไว้ที่ `/Volumes/Extreme SSD/bill_dev_archives/melearn_solana_chat-duplicate-20260927-160150` สำหรับกู้คืนเท่านั้น
+`npm run dev` and `npm start` always use the repository root, and they stop with an error if port 43123 is already taken. Use `npm run dev` while editing UI so the page follows the code without a fresh production build.
+
+An older copy, including its Git history, uncommitted work, `.env.local`, and previous data, is kept only for recovery at `/Volumes/Extreme SSD/bill_dev_archives/melearn_solana_chat-duplicate-20260927-160150`.
 
 ```bash
 npm test
 npm run lint
 ```
 
-คำตอบเปิดของบทเรียนเรียก GPT-6 Luna Pro ผ่าน OpenRouter (`openai/gpt-6-luna-pro`) คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ `AI_API_KEY` จาก [openrouter.ai/keys](https://openrouter.ai/keys) ถ้าไม่ใส่คีย์ ระบบใช้ครูตามบทเรียนบนเซิร์ฟเวอร์ คำใบ้ ตัวอย่าง แบบฝึก และการตรวจคำตอบยังอยู่ที่เซิร์ฟเวอร์ ไม่ส่งให้โมเดล
+Open lesson replies call GPT-6 Luna Pro through OpenRouter (`openai/gpt-6-luna-pro`). Copy `.env.example` to `.env.local` and set `AI_API_KEY` from [openrouter.ai/keys](https://openrouter.ai/keys). Without a key, the server uses the lesson tutor. Set `TAVILY_API_KEY` as well when the model should look up current facts, news, prices, statistics, or sources. Found links are attached to the answer. Without that key, the app does not search the web. Set `SUPADATA_API_KEY` when a message that contains a YouTube link should include that video's existing captions. Hints, examples, practice, and answer checks stay on the server and are not sent to the model or to Supadata.
 
-หน้าเว็บใช้คอมโพเนนต์จาก shadcn/ui รวมถึงแถบด้านข้าง และสลับธีมมืดกับสว่างได้ โทนสีหลักยังเป็นขาวฟ้าของ Melearn
+The site uses shadcn/ui, including the sidebar, and can switch between dark and light themes. The main palette stays Melearn white and light blue.
 
-โค้ดตรวจธุรกรรม Solana devnet ด้วย `@solana/kit` และ Wallet Standard ยังอยู่ในโปรเจกต์ แต่เส้นทางเดโมนี้ไม่ได้เรียกเก็บเงิน และข้อความในแชตปลดล็อกบทเรียนไม่ได้
+Solana devnet transaction checks with `@solana/kit` and Wallet Standard are still in the project. This demo path does not collect payment, and a chat message cannot unlock a lesson.
 
-สคีมา Supabase อยู่ใน `supabase/migrations/0001_init.sql` ใส่ `NEXT_PUBLIC_SUPABASE_URL` กับคีย์ใน `.env.local` เมื่อมีโปรเจกต์ Supabase ถ้ายังไม่ใส่ ค่าแชตและความคืบหน้าอยู่ใน SQLite ที่เครื่องนี้ เพื่อให้เดโมรันได้โดยไม่ต้องมีบัญชีคลาวด์
+The live store is SQLite at `data/melearn.db`. A Cloudflare D1 export is prepared in `cloudflare/` and is not the running database. See [docs/cloudflare-migration.md](docs/cloudflare-migration.md).
 
-## เส้นทางเดโม
+Public-repo checks, CI, the selected Cloudflare account, and the stored production secrets are documented in [docs/public-repo-and-deployment.md](docs/public-repo-and-deployment.md). GitHub CI checks code without production credentials; deployment will use Cloudflare Workers Builds after the runtime migration.
 
-1. หน้าแรกแนะนำระบบ ครู ตัวอย่างการเรียน แพ็กเกจ และ FAQ ในหน้าเดียว ลองสลับครูและกดคำใบ้ในตัวอย่างได้โดยไม่มีการเรียก AI
-2. กดเริ่มเรียน ไปสมัครหรือเข้าสู่ระบบที่ `/login` แล้วเข้าพื้นที่เรียน ถ้าเลือกครูจากหน้าแรกจะกลับไปบทเรียนที่เลือกหลังเข้าสู่ระบบ
-3. คุย ขอคำใบ้ ขอตัวอย่าง หรือลองทำเอง แถบด้านข้างไปหน้าครู แชต การเรียน ราคา และโปรไฟล์
-4. ส่งครบ 10 ข้อความแล้วระบบหยุดรับข้อความจนครบ 24 ชั่วโมง ปุ่มเติม Pro ไม่ตัดเงิน
-5. `/pricing` พากลับไปส่วนแพ็กเกจใน landing page โดยไม่มี sidebar ของแอป
+## Demo path
 
-## ข้อมูล
+1. The home page introduces the product, teachers, a lesson sample, packages, and FAQ on one page. Switching teachers and pressing hint in the sample does not call the model.
+2. Start learning, register or sign in at `/login`, then enter the classroom. Choosing a teacher on the home page returns to that lesson after sign-in.
+3. Chat, ask for a hint, ask for an example, or try it yourself. The sidebar goes to teachers, chats, learning, pricing, and profile.
+4. After 10 messages the server stops accepting more until 24 hours have passed. The Pro top-up button does not charge anyone.
+5. `/pricing` returns to the package section on the landing page and does not use the app sidebar.
 
-แชต โปรไฟล์ ความคืบหน้า และสิทธิ์อยู่ใน SQLite ที่ `data/melearn.db` บนเชนมีเฉพาะการโอน SOL ทดสอบ ไม่มีชื่อนักเรียนหรือเนื้อแชต
+## Data
 
-โควตา 10 ข้อความสำหรับแชตจริงผูกกับบัญชี หน้าต่างนับ 24 ชั่วโมงจากข้อความแรกของรอบนั้น ข้อมูล guest เดิมยังคงอยู่และย้ายเข้าบัญชีตาม logic เดิม แต่ API เริ่มบทสนทนา ส่งข้อความ และส่งคำตอบต้องเข้าสู่ระบบแล้ว
+Chats, profiles, progress, and entitlements live in SQLite at `data/melearn.db`. On-chain data, when a test payment is built, is only a test SOL transfer. Student names and chat text are not written on-chain.
 
-## โครงสร้างหน้าจอ
+The 10-message quota for real chat is tied to the account. The 24-hour window starts at the first message of that window. Older guest data can still be migrated into an account by the existing logic, but starting a conversation, sending a message, and submitting an answer require a signed-in session.
 
-- `app/(public)/`: landing page, login และทางเข้า pricing ใช้ header/footer สาธารณะ
-- `app/(user)/`: หน้าครู การเรียน แชต และโปรไฟล์ ใช้ layout ของแอป
-- `components/landing/`: คอมโพเนนต์และ CSS เฉพาะหน้าสาธารณะ
-- `content/landing.ts`: เนื้อหาไทย/อังกฤษ รวม mockup conversation และแพ็กเกจตัวอย่าง
-- `public/landing/math-background.webp`: ภาพพื้นหลัง hero จาก image generation รายละเอียด prompt อยู่ใน `docs/landing-image.md`
+Wallet sign-in (MetaMask, Phantom, Solflare) is verified on this server. See [docs/wallet-login.md](docs/wallet-login.md).
 
-Route groups ไม่เปลี่ยน URL เดิม การแยก directory ไม่ใช่ permission: หน้า `/learn/...` redirect ผู้เยี่ยมชมไป login และ API ของแชตตรวจ session ก่อนทำงาน
+## Screen layout
 
-บทแนะนำตัวและบทร้อยละมาจาก Dev Kit บทสั่งเครื่องดื่มและบทส่วนลดเป็นเนื้อหาเดโมที่เปิดให้เรียนฟรีในช่วงนี้
+- `app/(public)/`: landing page, login, and the pricing entry, with the public header and footer
+- `app/(user)/`: teachers, learning, chat, and profile, with the app layout
+- `components/landing/`: components and CSS for public pages only
+- `content/landing.ts`: Thai and English copy, including the mock conversation and sample packages
+- `public/landing/math-background.webp`: hero background from image generation; the prompt is in `docs/landing-image.md`
 
-สเปกต้นทางอยู่ใน `docs/specs/` โทเคนสีอยู่ใน `design/tokens.json`
+Route groups do not change the existing URLs. Splitting directories is not an access control: `/learn/...` can be previewed by a guest, and chat APIs check the session before they run.
+
+The introduction and percentage lessons come from the Dev Kit. The drink-order and discount lessons are demo content and are free during this period.
+
+Source specs are in `docs/specs/`. Color tokens are in `design/tokens.json`.

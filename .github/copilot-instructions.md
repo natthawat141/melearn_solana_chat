@@ -1,0 +1,5 @@
+# Melearn — Copilot instructions
+
+Read and follow the root `AGENTS.md` before editing; it is the canonical project instruction source.
+
+Its components-first workflow is mandatory: load and reuse installed components, then registry components; create custom UI only when neither meets the requirement. Pass the same rule to delegated agents.

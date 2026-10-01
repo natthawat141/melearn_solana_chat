@@ -1,280 +1,280 @@
-# แผนปรับ UX/UI ภายใน Melearn สำหรับส่งต่อให้ผู้พัฒนา
+# Interior UX plan for Melearn, for the next developer
 
-วันที่: 27 กันยายน 2026
+Date: 27 September 2026
 
-สถานะ: เอกสารวางแผน ผู้ใช้ขอให้หยุดเขียนโค้ดและส่งแผนให้ AI ตัวอื่นพัฒนา เอกสารนี้ไม่ใช่คำสั่งให้เริ่ม implement ในแชตที่จัดทำแผน
+Status: planning document. The user asked to stop writing code and hand the plan to another AI to build. This file is not an instruction to start implementing inside the chat that wrote the plan.
 
-## 1. เป้าหมายและขอบเขต
+## 1. Goal and scope
 
-Landing page ได้รับการยอมรับแล้ว งานรอบถัดไปคือทำให้พื้นที่ภายในมีคุณภาพและความสอดคล้องกับหน้าสาธารณะ โดยแก้ flow การเข้าเรียน การสมัคร การตั้งค่าโปรไฟล์ และคอมโพเนนต์ที่ไม่ตามธีม
+The landing page is accepted. The next round is to bring the interior up to the same quality and consistency as the public pages, by fixing the path into a lesson, registration, profile setup, and components that do not follow the theme.
 
-ผลลัพธ์ที่ต้องได้:
+Required outcomes:
 
-1. ผู้เยี่ยมชมเข้าดูหน้าครู บทเรียน และห้องพูดคุยได้โดยไม่ login
-2. ก่อนส่งข้อความ ขอคำใบ้ ขอตัวอย่าง หรือเริ่มแบบฝึก ต้อง login/register
-3. หลังสมัครใหม่เห็น setup โปรไฟล์การเรียน แยกจากหน้า `/app`
-4. หลัง auth/setup กลับไปยังครูและบทเรียนที่เลือกไว้ ไม่กลับหน้าแรกโดยไม่มีเหตุผล
-5. หน้าแอปหลักมีหน้าที่ช่วยเลือกเรียนและเรียนต่อ ไม่มีแบบสอบถามระดับปะปน
-6. หน้า login/register/setup ใช้ shadcn/ui ที่ติดตั้งจาก registry แล้วนำมาประกอบ
-7. Light/dark ใช้ semantic tokens เดียวกัน ไม่มีพื้นขาวหรือสีข้อความที่ล็อกจนอ่านไม่ได้
-8. AI ที่พัฒนาต่อใช้ repository ชุดหลักเดียว และตรวจคอมโพเนนต์ก่อนเขียนเอง
+1. A visitor can open a teacher page, a lesson, and the conversation room without logging in.
+2. Before sending a message, asking for a hint, asking for an example, or starting practice, they must log in or register.
+3. After a new registration, learning-profile setup is its own step, separate from `/app`.
+4. After auth and setup, return to the teacher and lesson that were selected. Do not dump the user on the home page without a reason.
+5. The main app page helps someone choose what to study and continue. It does not mix in a level questionnaire.
+6. Login, register, and setup use shadcn/ui components that are already installed, composed together.
+7. Light and dark share the same semantic tokens. There is no locked white surface or text color that becomes unreadable.
+8. The AI that continues the work uses the single canonical repository and checks components before writing new ones.
 
-สิ่งที่ไม่อยู่ในงานนี้: ออกแบบ landing ใหม่, เปลี่ยน AI tutor/grading, เพิ่ม payment จริง, deploy production, เพิ่มระบบหลายบัญชีผู้เรียนในบัญชีเดียว หรือรื้อฐานข้อมูลโดยไม่มีความจำเป็น
+Out of scope: redesigning the landing page, changing the AI tutor or grading, adding real payments, a production deploy, several learners inside one account, or rebuilding the database without a need.
 
-## 2. สถานะโค้ดที่ผู้รับงานต้องรู้ก่อนเริ่ม
+## 2. Code state the next person must know before starting
 
-มีการแก้บางไฟล์ก่อนผู้ใช้สั่งหยุด ผู้รับงานต้องอ่าน diff ก่อน และถือว่างานเหล่านี้เป็นงานค้าง ยังไม่ผ่านการตรวจรับ flow ทั้งหมด ห้ามรายงานว่าแผนนี้ implement เสร็จแล้วเพียงเพราะพบไฟล์อยู่
+Some files were edited before the user said stop. Read the diff first. Treat that work as unfinished. It has not passed a full flow review. Do not report that this plan is implemented just because the files exist.
 
-| ส่วน | สถานะที่พบตอนส่งต่อ | สิ่งที่ผู้รับงานต้องทำ |
+| Area | State at handoff | What the next person must do |
 | --- | --- | --- |
-| `/learn/[lessonId]` | เริ่มเพิ่ม guest preview แบบ static greeting | ตรวจว่าไม่สร้าง conversation และไม่ใช้ quota/AI |
-| `ChatRoom` | เริ่มเพิ่ม Dialog ขอ login/register ก่อนส่ง | ตรวจทุก action, session หมดอายุ, และการคืนบทเรียน |
-| LoginPanel | เริ่มเปลี่ยนเป็น Card/Field/Input/Button และ redirect setup | ตรวจ validation, error, mode switch และ return path |
-| `/setup` | มี route และ Onboarding ฉบับใหม่ | ตรวจ layout, save/skip, authentication และ redirect loop |
-| `/app` | เอา Onboarding ที่ฝังอยู่หน้าแรกออกแล้วบางส่วน | ตรวจ guest/member layout และไม่มี setup ซ้ำ |
-| Register API | เริ่มตั้งบัญชีใหม่ให้ยังไม่ onboarded | ตรวจผลกระทบจาก guest preferences และข้อมูลเดิม |
-| UI wrappers | เริ่มแทน `bg-white` ด้วย `bg-card` | ตรวจพื้นผิวที่เหลือทั้ง app; ยังไม่ใช่ audit ที่เสร็จแล้ว |
-| shadcn components | เพิ่ม Field, ToggleGroup/Toggle, Alert, Spinner ผ่าน CLI | อ่านไฟล์ก่อนใช้ และรักษา Button ที่ปรับสีไว้เดิม |
+| `/learn/[lessonId]` | A static guest greeting preview was started | Confirm it does not create a conversation and does not use quota or the model |
+| `ChatRoom` | A login/register Dialog before send was started | Check every action, an expired session, and returning to the lesson |
+| LoginPanel | A move to Card, Field, Input, and Button, plus a setup redirect, was started | Check validation, errors, mode switch, and the return path |
+| `/setup` | The route and a new Onboarding exist | Check layout, save/skip, authentication, and redirect loops |
+| `/app` | The Onboarding that was embedded on the home page was partly removed | Check guest and member layout, and that setup is not repeated |
+| Register API | New accounts were started as not yet onboarded | Check the effect on guest preferences and existing data |
+| UI wrappers | Some `bg-white` was replaced with `bg-card` | Check remaining surfaces across the app; this is not a finished audit |
+| shadcn components | Field, ToggleGroup/Toggle, Alert, and Spinner were added through the CLI | Read the files before use, and keep the Button whose color was already adjusted |
 
-การแก้ก่อนหน้านี้ของ landing, โลโก้, route groups, ปุ่มภาษา/ธีม และ workspace เป็นงานคนละช่วง ห้ามใช้ `git reset`, `git checkout .` หรือ `git clean` เพื่อทิ้ง diff รวม เพราะจะลบงานที่ผู้ใช้รับแล้วด้วย
+Earlier landing, logo, route-group, language and theme button, and workspace changes are a different round of work. Do not use `git reset`, `git checkout .`, or `git clean` to throw away the combined diff. That would also delete work the user already accepted.
 
-หากส่วนที่เริ่มไว้ไม่ตรงแผน ให้แก้เฉพาะส่วนที่เกี่ยวข้องหรือคืนเฉพาะ diff นั้นหลังตรวจที่มา ห้ามอนุมานว่าไฟล์ untracked ลบทิ้งได้
+If something that was started does not match the plan, change only the related part, or revert only that diff after checking where it came from. Do not assume an untracked file can be deleted.
 
-## 3. กติกาการใช้คอมโพเนนต์: ตรวจและโหลดก่อนเขียน
+## 3. Component rule: check and load before writing
 
-ขั้นตอนบังคับสำหรับทุกหน้าหรือ control ใหม่:
+Required for every new page or control:
 
-1. อ่าน `AGENTS.md`, `components.json` และ inventory ใน `components/ui`
-2. ใช้ `npx shadcn@latest info --json` เพื่อยืนยัน preset/base และ components ที่มี
-3. ถ้ามีคอมโพเนนต์อยู่แล้ว ใช้ของเดิม ไม่ดาวน์โหลดซ้ำหรือสร้างตัวเลียนแบบ
-4. ถ้ายังไม่มี ให้ค้น registry และอ่าน official docs ก่อน จากนั้นเพิ่มด้วย `npx shadcn@latest add <component>`
-5. ห้าม init/reinstall preset หรือ `--overwrite` ทับของที่ปรับไว้โดยพลการ
-6. เขียนเฉพาะ business behavior และการประกอบหน้าจอ เมื่อมี primitive ที่รองรับแล้ว
-7. ถ้าจำเป็นต้องเขียน custom ให้ระบุ requirement ที่ component เดิมทำไม่ได้ไว้ในคำอธิบายงาน
+1. Read `AGENTS.md`, `components.json`, and the inventory in `components/ui`.
+2. Run `npx shadcn@latest info --json` to confirm the preset, base, and installed components.
+3. If a component is already there, use it. Do not download it again or build a lookalike.
+4. If it is missing, search the registry and read the official docs first, then add it with `npx shadcn@latest add <component>`.
+5. Do not init or reinstall the preset, and do not `--overwrite` a customized component on your own.
+6. Write only business behavior and page composition once a primitive already covers the control.
+7. If a custom control is necessary, record the requirement the existing component cannot meet in the work notes.
 
-ไม่ต้องติดตั้งทุก component ในตารางล่วงหน้า ติดตั้งเมื่อถึงงานที่ใช้จริง
+Do not install every component in the table ahead of time. Install one when the task that uses it starts.
 
-| ความต้องการ | ใช้คอมโพเนนต์ |
+| Need | Component to use |
 | --- | --- |
-| ปุ่ม/ลิงก์ที่เป็น action | Button และ variants; ลิงก์ใช้ asChild |
-| Login/register | Card, FieldGroup, Field, FieldLabel, Input, Button, Alert, Spinner |
-| ระดับ/เป้าหมายแบบเลือกหนึ่ง | ToggleGroup หรือ RadioGroup ตามความเหมาะสม ไม่ทำปุ่ม active เอง |
-| จุดขอ login ก่อนคุย | Dialog พร้อม DialogTitle/Description/Footer |
-| Sidebar และมือถือ | Sidebar/SidebarTrigger/Sheet ที่มีอยู่ |
-| รายการครู/บทเรียน | Card, Avatar พร้อม fallback, Badge |
-| เปลี่ยนภาษา | LanguageSwitcher ที่ประกอบ DropdownMenu เดิม |
-| เปลี่ยนธีม | ThemeToggle เดิม ห้ามแยกอีกชุดในแต่ละหน้า |
-| สถานะบันทึก/ส่งข้อความ | Spinner และ disabled state |
-| รอข้อมูล | Skeleton ที่สอดคล้องกับโครงหน้า |
-| ข้อผิดพลาด/ข้อความแจ้ง | Alert; ใช้ toast เมื่อเป็นผลการกระทำที่ไม่ต้องค้างในหน้า |
-| ไม่มีแชต/ไม่มีประวัติ | Empty หากเหมาะสม ตรวจและเพิ่มก่อนใช้ |
-| พื้นที่พิมพ์แชต | ตรวจ InputGroup/InputGroupTextarea/Addons ก่อนประกอบ composer เอง |
-| ข้อมูลความคืบหน้า | Progress หากแสดงสัดส่วนที่มีข้อมูลจริง |
+| Action buttons and links | Button and its variants; links use `asChild` |
+| Login and register | Card, FieldGroup, Field, FieldLabel, Input, Button, Alert, Spinner |
+| Choose one level or goal | ToggleGroup or RadioGroup, whichever fits. Do not hand-roll an active button |
+| Ask to log in before chatting | Dialog with DialogTitle, Description, and Footer |
+| Sidebar and phone | The existing Sidebar, SidebarTrigger, and Sheet |
+| Teacher and lesson lists | Card, Avatar with a fallback, Badge |
+| Language | The existing LanguageSwitcher built on DropdownMenu |
+| Theme | The existing ThemeToggle. Do not add another copy on each page |
+| Saving or sending | Spinner and a disabled state |
+| Waiting for data | A Skeleton that matches the page structure |
+| Errors and notices | Alert. Use a toast when the result does not need to stay on the page |
+| No chats or no history | Empty, if it fits. Check it and add it before use |
+| Chat composer | Check InputGroup, InputGroupTextarea, and Addons before building a composer by hand |
+| Progress | Progress, when showing a ratio that comes from real data |
 
-ต้องรักษา keyboard navigation, focus, labels, loading และ disabled behavior ที่ component มี ไม่ลดให้เหลือแค่หน้าตา
+Keep the keyboard navigation, focus, labels, loading, and disabled behavior the component already has. Do not reduce it to appearance only.
 
-## 4. Flow และสถานะผู้ใช้
+## 4. Flows and user states
 
-### 4.1 ผู้เยี่ยมชม
+### 4.1 Visitor
 
-Landing → เลือกครู/บทเรียน → `/learn/[lessonId]` → เห็นห้องคุยและคำทักทาย → กดส่ง/คำใบ้/ตัวอย่าง/แบบฝึก → Dialog ขอ login/register
+Landing, then choose a teacher or lesson, then `/learn/[lessonId]`, then see the room and a greeting, then press send, hint, example, or practice, then a Dialog asks them to log in or register.
 
-- เปิดห้องได้ ไม่ redirect ไป login ตั้งแต่เข้าหน้า
-- ไม่สร้าง conversation, progress หรือ message จริงเพียงเพราะเปิด preview
-- คำทักทายมาจากเนื้อหาบทเรียน ไม่เรียก AI
-- ไม่แสดงจำนวน quota เสมือนว่าคุยฟรีได้ก่อน login
-- อนุญาตให้พิมพ์ draft เพื่อเห็นวิธีใช้ แต่ห้ามส่งไป API ก่อน auth
-- Dialog ปิดได้และยังอยู่ในห้องเดิม
-- ปุ่ม “เข้าสู่ระบบ” และ “สมัครสมาชิก” ชัดเจน พร้อมอธิบายว่าจะกลับบทเรียนนี้
-- การกด chip และการส่งผ่าน Enter ต้องผ่าน gate เดียวกับปุ่มส่ง
-- ไม่แสดงประวัติของคนอื่นหรือสร้างประวัติให้ guest
+- The room opens. Do not redirect to login on arrival.
+- Opening the preview does not create a conversation, progress, or a real message.
+- The greeting comes from the lesson content. It does not call the model.
+- Do not show a quota count as if they can chat for free before login.
+- They may type a draft so the control is understandable. Do not send it to the API before auth.
+- The Dialog can be closed, and they stay in the same room.
+- "Log in" and "Register" are clear, and they explain that the user will return to this lesson.
+- Chips and Enter go through the same gate as the send button.
+- Do not show someone else's history, and do not create history for a guest.
 
-### 4.2 สมัครสมาชิกใหม่
+### 4.2 New registration
 
-ห้องคุย → สมัคร → สร้าง session → `/setup?next=<บทเรียนเดิม>` → บันทึกหรือข้าม → บทเรียนเดิม
+Conversation room, then register, then a session is created, then `/setup?next=<the same lesson>`, then save or skip, then the same lesson.
 
-- บัญชีใหม่เริ่มในสถานะยังไม่ตั้งค่า ไม่สืบทอด flag เสร็จแล้วของ guest โดยไม่ตั้งใจ
-- Setup อยู่หน้าของตัวเอง ไม่มี Sidebar ที่แย่งความสนใจ
-- ถ้าสมัครจากปุ่มทั่วไป ไม่มีบทเรียนที่เลือก เมื่อ setup เสร็จให้ไป `/app`
-- ห้ามส่ง draft ที่พิมพ์ก่อนสมัครให้อัตโนมัติ ผู้ใช้ต้องกดส่งเองหลังกลับมา
+- A new account starts as not yet set up. Do not accidentally inherit a guest's completed flag.
+- Setup is its own page. It does not have a Sidebar competing for attention.
+- If they register from a general button and no lesson was selected, go to `/app` when setup finishes.
+- Do not send a draft typed before registration automatically. The user presses send themselves after they return.
 
-### 4.3 บัญชีเดิม
+### 4.3 Existing account
 
-ห้องคุย → login → กลับบทเรียนเดิม ถ้าตั้งค่าแล้วไม่ถามระดับซ้ำ
+Conversation room, then login, then back to the same lesson. If setup is already done, do not ask for level again.
 
-ถ้าบัญชีเก่ายังไม่เคย setup ให้แสดง setup ครั้งเดียวก่อนเริ่มใช้ flow เรียน ไม่แทรกแบบฟอร์มใน dashboard ทุกครั้ง
+If an older account has never completed setup, show setup once before the learning flow. Do not insert the form into the dashboard on every visit.
 
-### 4.4 Session หมดอายุ
+### 4.4 Expired session
 
-- API ส่งข้อความตอบ 401 → แสดง auth gate ไม่ใช่ปุ่ม retry เครือข่ายทั่วไป
-- เก็บ draft ที่ยังไม่ส่งไว้ในหน้าที่เปิดอยู่
-- การกลับจาก auth ต้องตรวจ ownership ใหม่และใช้ conversation ของบัญชีปัจจุบัน
-- ไม่ผูก conversation ของบัญชีก่อนหน้าเมื่อผู้ใช้ login ด้วยคนละบัญชี
+- A message API that returns 401 shows the auth gate, not a generic network retry button.
+- Keep the unsent draft on the page that is open.
+- Returning from auth must check ownership again and use the current account's conversation.
+- Do not attach a previous account's conversation when the user logs in as someone else.
 
-### 4.5 Return path และ draft
+### 4.5 Return path and draft
 
-- ตรวจ `next` ฝั่ง server ด้วย allowlist ที่มีอยู่; ไม่ยอมรับ URL ภายนอกหรือ path API
-- เก็บบทเรียนเดิมผ่าน login, register, setup และ mode switch
-- ถ้าจะเก็บ draft ข้าม navigation ให้ใช้ storage ฝั่ง browser แบบชั่วคราว ผูก lesson และล้างหลังส่งสำเร็จ/logout มีขนาดและอายุจำกัด
-- ไม่เก็บ password/session token ในกลไกเก็บ draft
-- การรองรับ draft ข้าม navigation เป็นรายการงานแยก ต้องระบุชัดว่ารองรับแล้วหรือยัง อย่าอ้างว่าคืน draft ได้หากคืนแค่ lesson
+- Validate `next` on the server with the existing allowlist. Do not accept an external URL or an API path.
+- Keep the original lesson through login, register, setup, and mode switch.
+- If a draft must survive navigation, use temporary browser storage, bind it to the lesson, and clear it after a successful send or logout. Limit its size and lifetime.
+- Do not store a password or session token in the draft mechanism.
+- A draft that survives navigation is a separate task. Say clearly whether it is supported. Do not claim the draft is restored if only the lesson is restored.
 
-## 5. ตารางสิทธิ์และเส้นทาง
+## 5. Access and routes
 
-| หน้า/action | Guest | บัญชียังไม่ setup | บัญชี setup แล้ว |
+| Page or action | Guest | Account not set up | Account set up |
 | --- | --- | --- | --- |
-| Landing/pricing/ข้อมูลครู | ดูได้ | ดูได้ | ดูได้ |
-| `/app` รายการครู/บทเรียน | ดูได้ ไม่มีข้อมูลส่วนบุคคล | ดูรายการได้ ไม่ฝัง setup | ดูและเรียนต่อ |
-| ห้องคุย `/learn/...` | preview เท่านั้น | ไป setup ก่อนเริ่มเรียนจริง | ใช้ conversation ของบัญชี |
-| Login/register | ใช้ได้ | ไป setup ตาม context | ไปปลายทางที่ถูกต้อง |
-| `/setup` | ขอ auth | ตั้งค่าได้ | ไปปลายทาง ไม่วน setup |
-| `/chats`, `/learning` | แสดงสถานะต้อง login ไม่แสดงประวัติ | ไม่มีประวัติของ guest ปะปน | ข้อมูลของบัญชี |
-| `/profile` | CTA เข้าสู่ระบบ | ข้อมูลบัญชี/ทางเข้า setup | แก้โปรไฟล์และ preferences |
-| สร้าง conversation/ส่งข้อความ/ส่งคำตอบ API | 401 | ต้องเป็นบัญชี; UI พา setup | ต้องตรวจบัญชีและ ownership |
+| Landing, pricing, teacher info | Can view | Can view | Can view |
+| `/app` teacher and lesson list | Can view, no personal data | Can view the list, setup is not embedded | Can view and continue |
+| `/learn/...` room | Preview only | Go to setup before real study | Use the account's conversation |
+| Login and register | Available | Go to setup for the context | Go to the correct destination |
+| `/setup` | Ask for auth | Can set preferences | Go to the destination, do not loop setup |
+| `/chats`, `/learning` | Show that login is required. Do not show history | No guest history mixed in | The account's data |
+| `/profile` | Sign-in CTA | Account data and a way into setup | Edit profile and preferences |
+| Create conversation, send a message, submit an answer | 401 | Must be an account; the UI leads to setup | Must check the account and ownership |
 
-Setup เป็นขั้น UX สำหรับข้อมูลผู้เรียน ไม่ใช้แทน authentication/ownership ของ API ผู้พัฒนาต้องรักษาการตรวจสิทธิ์ฝั่ง server แม้ปุ่มฝั่ง UI จะเปิด Dialog แล้ว
+Setup is a UX step for learner information. It does not replace API authentication or ownership checks. Keep the server-side checks even when a UI button opens a Dialog.
 
-## 6. หน้าจอที่ต้องปรับ
+## 6. Screens to adjust
 
-### 6.1 App shell และระบบสี — ทำก่อนหน้ารายละเอียด
+### 6.1 App shell and color — do this before screen details
 
-- หน้าภายในใช้ spacing, card radius, typography และขนาด control ที่สอดคล้องกัน
-- Sidebar ให้เห็นเมนูหลัก: เรียน, แชต, ประวัติการเรียน, โปรไฟล์; pricing เป็นข้อมูลสาธารณะ ไม่เป็นหน้าชำระเงินปลอม
-- มือถือเปิด/ปิด Sidebar ผ่าน component เดิม ไม่สร้างเมนูซ้อนใหม่
-- Header ใช้ LanguageSwitcher และ ThemeToggle ชุดเดียวกับ landing
-- ไม่เพิ่มชื่อ Melearn แบบ text แยกจากโลโก้โดยไม่มีการตกลง
-- พื้นหลังอาจใช้ radial gradient ฟ้าเบาบาง แต่พื้นสำหรับอ่าน/พิมพ์ต้องสงบ
-- แทน `bg-white`, สีฟ้า/ม่วงที่ hardcode, และ style inline ที่ใช้กับ surface ด้วย semantic tokens
-- สีเฉพาะภาพครูไม่จำเป็นต้องเปลี่ยน แต่สี card/text/border/control ต้องตาม theme
-- Action สีฟ้าอ่อนกับข้อความเข้มต้องยังอ่านง่ายในสองธีม ไม่ใช้ข้อความขาวบนฟ้าอ่อน
-- เคลื่อนไหวเฉพาะการตอบสนอง/เปลี่ยนสถานะ เคารพ reduced motion
+- Interior pages share spacing, card radius, typography, and control sizes.
+- The Sidebar shows the main menu: learn, chats, learning history, profile. Pricing is public information, not a fake checkout page.
+- On a phone, open and close the Sidebar with the existing component. Do not invent a second menu.
+- The header uses the same LanguageSwitcher and ThemeToggle as the landing page.
+- Do not add a separate Melearn text name beside the logo unless that was agreed.
+- The background may use a very light blue radial gradient, but reading and typing surfaces stay calm.
+- Replace `bg-white`, hardcoded blue or purple, and inline surface styles with semantic tokens.
+- Colors that belong to a teacher's image can stay. Card, text, border, and control colors follow the theme.
+- A light-blue action with dark text must stay readable in both themes. Do not put white text on light blue.
+- Motion is only for a response or a state change. Respect reduced motion.
 
-ตรวจไฟล์หลัก: `app/globals.css`, `components/melearn-ui.tsx`, `components/app-shell.tsx`, `components/ui/button.tsx` และ wrappers ที่ใช้ใน profile/chat
+Check `app/globals.css`, `components/melearn-ui.tsx`, `components/app-shell.tsx`, `components/ui/button.tsx`, and the wrappers used in profile and chat.
 
-### 6.2 Login/register
+### 6.2 Login and register
 
-- มีหัวข้อจริง, คำอธิบายสั้น, fields, submit, ทางเลือกสลับ mode และทางกลับ
-- ไม่มี decorative label เหนือหัวข้อ
-- ใช้ Card composition และ Field components ไม่ครอบ raw input ด้วย CSS เฉพาะชุดใหม่
-- validation สอดคล้องกับ API เดิม: required, ความยาวชื่อ/password, ชื่อซ้ำ, login ผิด และข้อผิดพลาดเครือข่าย
-- แสดง error ใกล้ฟอร์มด้วย Alert/FieldError ไม่ใช้ข้อความเล็กที่อ่านไม่ได้
-- ระหว่าง submit ปิดการกดซ้ำและแสดง Spinner โดย layout ไม่กระโดด
-- สลับ login/register แล้วเก็บ `next` และล้าง error ที่ไม่เกี่ยวข้อง
-- ไม่ใช้ AuthPanel และ LoginPanel เป็นฟอร์มคู่ขนานที่มี behavior ต่างกัน; เลือกหนึ่ง business form กลางและใช้ร่วมกัน
-- รักษา `autocomplete` และ label ที่ผูกกับ input
-- ไม่เปลี่ยนวิธี auth หรือเพิ่ม OAuth ในงานปรับ UI นี้
+- A real heading, a short description, fields, submit, a way to switch mode, and a way back.
+- No decorative label above the heading.
+- Compose Card and Field. Do not wrap a raw input in a new one-off CSS kit.
+- Validation matches the existing API: required fields, name and password length, a duplicate name, a wrong login, and a network error.
+- Show the error near the form with Alert or FieldError. Do not use tiny unreadable text.
+- While submitting, block a second press and show a Spinner. The layout does not jump.
+- Switching login and register keeps `next` and clears errors that no longer apply.
+- Do not keep AuthPanel and LoginPanel as two parallel forms with different behavior. Pick one shared business form and use it in both places.
+- Keep `autocomplete` and labels bound to inputs.
+- Do not change the auth method or add OAuth in this UI pass.
 
-### 6.3 Setup โปรไฟล์การเรียน
+### 6.3 Learning profile setup
 
-ข้อมูลเริ่มต้น: ระดับที่รู้สึกว่าเหมาะกับตนเอง และเป้าหมายการเรียน
+Starting data: the level that feels right, and the learning goal.
 
-- ถามสั้น ๆ ไม่ทำเป็นแบบทดสอบ
-- มีตัวเลือก “ยังไม่แน่ใจ” และ “ข้ามก่อน”
-- ใช้ ToggleGroup/RadioGroup ที่มีสถานะเลือกชัดเจนทั้งสองธีม
-- บันทึกลง profile ของบัญชี ไม่เขียนทับ guest แล้วถือว่าบัญชีตั้งค่าเสร็จ
-- กดบันทึกสำเร็จจึงเปลี่ยน `onboarded`; บันทึกล้มเหลวต้องยังอยู่หน้าเดิมพร้อมลองใหม่
-- ข้ามหมายถึงตั้งค่าแบบยังไม่แน่ใจและไม่ถามซ้ำทุกครั้ง ผู้ใช้ปรับได้ภายหลัง
-- หน้า `/profile` เป็นทางเข้าแก้ preferences หลัง setup
-- รอบนี้ตีความ profile ว่าเป็น learning profile ของแต่ละบัญชี ไม่รวมระบบหลายผู้เรียนในบัญชีเดียว
-- ระดับแยกตามวิชาเป็นข้อเสนอในอนาคต ต้องตกลง schema/behavior ก่อน ไม่เพิ่มเข้า scope เอง
+- Ask briefly. Do not turn it into a test.
+- Include "not sure" and "skip for now".
+- Use ToggleGroup or RadioGroup with a selected state that is clear in both themes.
+- Save onto the account profile. Do not write over the guest and then treat the account as finished.
+- `onboarded` changes only after a successful save. A failed save stays on the same page with a way to try again.
+- Skip means the preferences are set as not sure, and the question is not asked on every visit. The user can change them later.
+- `/profile` is where preferences are edited after setup.
+- In this round, a profile is the learning profile of one account. It does not include several learners in one account.
+- A level per subject is a future proposal. Agree the schema and behavior first. Do not add it to the scope on your own.
 
 ### 6.4 Dashboard `/app`
 
-ลำดับเนื้อหา:
+Content order:
 
-1. หัวข้อหลักและข้อความที่ช่วยรู้ว่าทำอะไรต่อ
-2. “เรียนต่อ” เฉพาะสมาชิกที่มีประวัติ
-3. รายการครู/วิชาและบทเรียนที่เลือกได้
-4. ความคืบหน้าที่มีข้อมูลจริง ถ้าไม่มีให้แสดง empty state ที่ชวนเลือกบทเรียน
+1. A main heading and a line that says what to do next.
+2. "Continue" only for a member who has history.
+3. Teachers, subjects, and lessons that can be selected.
+4. Progress that comes from real data. If there is none, an empty state that invites them to pick a lesson.
 
-- เอาการเลือกระดับ/เป้าหมายออกจากหน้า dashboard
-- Guest เห็นรายการเรียนและเปิดห้องได้ ไม่เห็นบล็อกประวัติปลอม
-- ครูแต่ละคนแสดงรูป ชื่อ วิชา คำอธิบายสั้น และ action เดียวที่ชัดเจน
-- ไม่ให้ตัวเลขสถิติและคำแนะนำที่ยังไม่ได้คำนวณจริง
-- ไม่ซ้ำข้อมูล landing ทุก section ใน dashboard
+- Remove level and goal selection from the dashboard.
+- A guest sees the lesson list and can open a room. They do not see a fake history block.
+- Each teacher shows a portrait, name, subject, a short description, and one clear action.
+- Do not show statistics or recommendations that were not actually calculated.
+- Do not repeat every landing section inside the dashboard.
 
-### 6.5 หน้าครู `/teachers/[id]`
+### 6.5 Teacher page `/teachers/[id]`
 
-- ภาพ/ชื่อครู วิชา คาแรกเตอร์สั้น ๆ และบทเรียน
-- บทเรียนแสดงชื่อ ระดับ/เวลาเมื่อมีข้อมูล สถานะ และ action
-- Guest ใช้ “ดูห้องเรียน”; สมาชิกใช้ “เริ่มเรียน/เรียนต่อ/ทบทวน” ตามข้อมูลจริง
-- ครูที่ยังไม่พร้อมต้องมีสถานะและไม่พาไปห้องคุยที่ใช้ไม่ได้
-- ใช้ Card/Avatar/Badge/Button แทนชุด HTML ที่ต้องเขียน CSS แยก
+- Portrait, name, subject, a short character note, and lessons.
+- A lesson shows its name, level or duration when that data exists, a status, and an action.
+- A guest uses "view classroom". A member uses "start", "continue", or "review" according to real data.
+- A teacher who is not ready has a status and does not lead to a room that cannot be used.
+- Use Card, Avatar, Badge, and Button instead of a separate HTML kit with its own CSS.
 
-### 6.6 ห้องคุย
+### 6.6 Conversation room
 
-- Desktop: header ครูชัดเจน พื้นอ่านแชตตรงกลาง และ composer ติดด้านล่าง
-- Mobile: composer อยู่เหนือ safe area/keyboard, header ไม่กินพื้นที่จนข้อความอ่านไม่ได้
-- ข้อความ user/teacher แยกได้โดยไม่ต้องใช้สีแรง
-- รองรับข้อความยาว ภาษาไทย/อังกฤษ และสูตรคณิตโดยไม่ล้น viewport
-- อย่ารื้อ math rendering หรือเอา HTML ที่ไม่ปลอดภัยเข้ามาเพื่อทำสูตรสวย
-- Hint/example/practice ใช้ Button variants ที่เป็นชุดเดียวกัน
-- Guest action ทั้งหมดผ่าน auth gate; ข้อความทักทายไม่แสร้งว่าบันทึกแล้ว
-- Member action แสดง sending/error/retry/quota ตามข้อมูลจริง
-- เมื่อหมด quota แสดงเวลารออย่างชัดเจน ไม่สร้างปุ่มเติมเงินที่ทำให้เข้าใจว่า Pro ซื้อได้แล้ว
-- เลื่อนตามข้อความเมื่อผู้ใช้อยู่ท้ายแชต ถ้าอ่านด้านบนอยู่ให้แจ้งข้อความใหม่แทนดึงลงทันที
-- รักษา desktop Enter/Shift+Enter และพฤติกรรมมือถือ ไม่ส่งข้อความเพียงกด newline
-- การแก้ composer ต้องตรวจ InputGroup ก่อน ไม่เขียนชุดปุ่มใน input ใหม่โดยไม่จำเป็น
+- Desktop: a clear teacher header, a reading surface in the center, and a composer stuck to the bottom.
+- Mobile: the composer sits above the safe area and the keyboard. The header does not consume so much space that messages are unreadable.
+- User and teacher messages are distinguishable without loud color.
+- Long messages, Thai, English, and math formulas stay inside the viewport.
+- Do not rebuild math rendering, and do not bring in unsafe HTML to make formulas look nicer.
+- Hint, example, and practice use Button variants from the same set.
+- Every guest action goes through the auth gate. The greeting does not pretend it was saved.
+- Member actions show sending, error, retry, and quota from real data.
+- When quota is exhausted, show the wait time clearly. Do not add a top-up button that implies Pro can already be bought.
+- Follow the scroll when the user is at the bottom. If they are reading above, announce a new message instead of jumping down.
+- Keep desktop Enter and Shift+Enter, and the mobile behavior. Do not send a message just because newline was pressed.
+- Before changing the composer, check InputGroup. Do not write a new set of buttons inside the input unless that is necessary.
 
-### 6.7 แชตและประวัติการเรียน
+### 6.7 Chats and learning history
 
-- `/chats`: ครู/ชื่อบทเรียน ข้อความล่าสุด เวลาที่เกี่ยวข้อง และ action กลับห้อง
-- `/learning`: เรียนอยู่/เสร็จแล้ว/ทบทวน โดยไม่แสดง progress ที่ไม่มีข้อมูล
-- ไม่มีข้อมูลใช้ Empty ที่มี action เลือกครู
-- Guest ใช้ CTA auth ที่มีข้อความบอกว่าจะได้เก็บประวัติ ไม่แสดงรายการว่างเหมือนข้อมูลหาย
-- สถานะกำลังโหลดใช้ Skeleton; error ใช้ Alert พร้อม action ที่เหมาะสม
+- `/chats`: teacher or lesson name, latest message, a relevant time, and an action back to the room.
+- `/learning`: in progress, completed, or review. Do not show progress that has no data.
+- No data uses Empty with an action to choose a teacher.
+- A guest gets an auth CTA that says history will be saved. Do not show an empty list that looks like missing data.
+- Loading uses Skeleton. An error uses Alert with a suitable action.
 
 ### 6.8 Profile
 
-- แยกข้อมูลบัญชี, learning preferences, และการออกจากระบบ
-- แก้ระดับ/เป้าหมายที่เคย setup ได้โดยใช้ form controls ชุดเดียวกัน
-- การบันทึกแสดงสถานะสำเร็จ/ล้มเหลว ไม่เงียบหรือเปลี่ยนหน้าจนไม่รู้ผล
-- ภาษา/ธีมใช้ control กลาง ไม่มีชุดใหม่ที่ behavior ต่างกัน
-- ไม่ผสมฟอร์ม guest onboarding, login และข้อมูลสมาชิกในหน้าต่างเดียวโดยไม่มี state ชัดเจน
-- พื้น card/input และตัวเลือกต้องตาม theme; ตรวจ hardcoded colors ใน `profile-panel.tsx`
+- Separate account data, learning preferences, and sign out.
+- Level and goal chosen during setup can be edited with the same form controls.
+- Saving shows success or failure. It does not stay silent or navigate away before the result is clear.
+- Language and theme use the shared controls. Do not add a new set with different behavior.
+- Do not mix guest onboarding, login, and member data in one window without a clear state.
+- Card, input, and option surfaces follow the theme. Check hardcoded colors in `profile-panel.tsx`.
 
-## 7. ลำดับงานและจุดตรวจรับ
+## 7. Work order and acceptance
 
-| งาน | สิ่งที่ส่งมอบ | จุดตรวจรับ |
+| Task | What to deliver | What to accept |
 | --- | --- | --- |
-| 0. ตรวจ workspace/diff | สรุปไฟล์ที่เปลี่ยนก่อนหน้าและสิ่งที่จะเก็บ/แก้ | ใช้ root เดียว ไม่ทับงาน landing หรือข้อมูล |
-| 1. Tokens + shared components | App shell และ surfaces ที่ตามธีม | Light/dark อ่านได้ ไม่มี card ขาวค้างใน dark |
-| 2. Auth UI | ฟอร์ม login/register ชุดเดียวจาก shadcn | required/error/pending/mode switch/return path ใช้ได้ |
-| 3. Profile setup | หน้า setup และ flow หลัง auth | ไม่ปรากฏใน `/app`, save/skip แล้วกลับปลายทาง |
-| 4. Guest classroom + auth gate | เปิดห้องได้ก่อน auth พร้อม API boundary | Guest ไม่มี conversation/AI/quota mutation; ทุกส่งผ่าน gate |
-| 5. Dashboard + teacher page | เลือกเรียนและเรียนต่อได้ชัดเจน | Guest/member content ตรงสถานะและไม่มี mock history |
-| 6. Chat refinement | Composer, states, mobile layout | ส่ง/retry/quota/keyboard/scroll ไม่ถดถอย |
-| 7. History + profile | หน้าแชต/ประวัติ/โปรไฟล์ที่ใช้ components เดียวกัน | มี loading/empty/error และแก้ preferences ได้ |
+| 0. Check workspace and diff | A summary of files already changed, and what to keep or fix | One root. Do not overwrite landing work or data |
+| 1. Tokens and shared components | An app shell and surfaces that follow the theme | Light and dark are readable. No stuck white card in dark mode |
+| 2. Auth UI | One login/register form built from shadcn | Required fields, errors, pending, mode switch, and return path work |
+| 3. Profile setup | The setup page and the post-auth flow | It does not appear inside `/app`. Save or skip returns to the destination |
+| 4. Guest classroom and auth gate | The room opens before auth, with an API boundary | A guest gets no conversation, model call, or quota mutation. Every send goes through the gate |
+| 5. Dashboard and teacher page | Choosing a lesson and continuing is clear | Guest and member content match their state. No mock history |
+| 6. Chat refinement | Composer, states, and mobile layout | Send, retry, quota, keyboard, and scroll do not regress |
+| 7. History and profile | Chat, history, and profile pages that share components | Loading, empty, and error states exist, and preferences can be edited |
 
-พัฒนาเป็นช่วงที่ตรวจดูได้ ไม่แก้ทั้งหมดพร้อมกัน แต่ต้องจบ flow ที่เริ่มในแต่ละช่วงให้ครบ ไม่ส่งต่อ registration ที่พาไป route ใช้ไม่ได้
+Build in slices that can be looked at. Do not change everything at once, but finish the flow started in each slice. Do not hand off a registration that leads to a route that cannot be used.
 
-## 8. การตรวจงานที่เพียงพอ
+## 8. Enough checking
 
-ผู้ใช้ไม่ต้องการการตรวจละเอียดเกินจำเป็น ใช้หนึ่งรอบที่ครอบคลุมสิ่งเปลี่ยนและความเสี่ยงจริง:
+The user does not want a check that is heavier than the change. One pass that covers what changed and the real risks:
 
-- lint และ TypeScript ตาม project scripts
-- Guest เปิดห้องได้, ไม่มี conversation/progress เพิ่มจากการดู, API เขียนยังตอบ 401
-- Guest กดส่ง/Enter/chips ได้ gate เดียวกัน และไม่เกิด AI request
-- สมัครใหม่ → setup → บทเรียนเดิม; login บัญชีเดิม → บทเรียนเดิม
-- Setup save/skip/error ไม่วน redirect; `next` ภายนอกไม่ผ่าน
-- Dashboard ไม่มีฟอร์มระดับ และ profile ยังแก้ระดับได้
-- ภาพรวม desktop/mobile อย่างละหนึ่งขนาด, light/dark และภาษา TH/EN
-- ฟอร์ม login/register และ card/input ไม่แตกเมื่อเปลี่ยนธีม
+- Lint and TypeScript through the project scripts
+- A guest can open a room. Viewing it does not add a conversation or progress. Write APIs still return 401
+- Send, Enter, and chips share one gate, and no model request is made
+- New registration goes to setup and then the same lesson. An existing account logs in and returns to the same lesson
+- Setup save, skip, and error do not loop redirects. An external `next` is rejected
+- The dashboard has no level form, and profile can still edit level
+- One desktop size and one mobile size, light and dark, and Thai and English
+- Login and register forms, and cards and inputs, do not break when the theme changes
 
-ตรวจแบบจำลองหรือบัญชีทดสอบในข้อมูลแยก ไม่แก้บัญชีผู้ใช้จริงเพื่อให้ test ผ่าน ไม่เรียก AI จริงเพียงเพื่อทดสอบ auth gate
+Use a fixture or a test account in separate data. Do not change a real user's account to make a test pass. Do not call the real model just to test the auth gate.
 
-ถ้าเครื่องมือตรวจ browser ใช้ไม่ได้ ให้แจ้งข้อจำกัด ไม่อ้างว่า visual/interaction ผ่านจากการที่ server ส่ง HTML 200
+If a browser check is unavailable, say so. Do not claim a visual or interaction check passed because the server returned HTML 200.
 
-## 9. สิ่งที่ผู้พัฒนาต้องรายงานเมื่อส่งงาน
+## 9. What to report when handing work back
 
-1. Flow/หน้าที่เปลี่ยน และเหตุผล
-2. Components ที่นำมาใช้ และรายการที่เพิ่มจาก registry
-3. งานค้างจากช่วงก่อนหน้าที่เก็บหรือแก้ ไม่ปะปนกับงานใหม่
-4. ผลตรวจสั้น ๆ และข้อจำกัดที่ยังอยู่
-5. URL/ภาพของผลลัพธ์ที่ตรวจได้จริง
+1. Which flows and pages changed, and why
+2. Which components were reused, and which were added from the registry
+3. Earlier unfinished work that was kept or fixed, kept distinct from the new work
+4. A short check result, and the limits that remain
+5. A URL or image of a result that was actually checked
 
-อย่ารายงานว่าออกแบบภายในเสร็จแล้ว หากทำเพียง auth/setup อย่าส่ง PR/commit/deploy โดยถือว่าเอกสารแผนนี้เป็นการอนุมัติสิ่งเหล่านั้น
+Do not report that the interior design is finished if only auth and setup were done. Do not open a PR, commit, or deploy on the assumption that this plan approves those actions.
 
-## 10. ข้อความส่งต่อให้ AI ผู้พัฒนา
+## 10. Note to pass to the implementing AI
 
-“อ่าน AGENTS.md, docs/workspace-handoff.md และ docs/interior-ui-plan.md ก่อนเริ่ม ใช้ repository หลักเดียว รักษา landing ที่ผู้ใช้รับแล้ว ตรวจ diff งานค้างก่อนแก้ เริ่มจากงาน 0–4 ให้ flow guest → auth → setup → กลับบทเรียนครบ ใช้ shadcn/ui ที่มีอยู่ก่อน ถ้าขาดให้โหลดผ่าน CLI ก่อนเขียนเอง แล้วจึงปรับ dashboard/chat/history/profile ตามแผน รายงานเฉพาะสิ่งที่ทำและตรวจจริง ห้าม deploy หรือทิ้งงานเดิมโดยพลการ”
+"Read AGENTS.md, docs/workspace-handoff.md, and docs/interior-ui-plan.md before starting. Use the single canonical repository. Keep the landing page the user already accepted. Read the unfinished diff before editing. Start with tasks 0–4 so the guest, auth, setup, and return-to-lesson flow is complete. Use the shadcn/ui components that are already installed. If one is missing, load it through the CLI before writing your own. Then adjust the dashboard, chat, history, and profile according to the plan. Report only what you did and what you actually checked. Do not deploy, and do not discard earlier work on your own."

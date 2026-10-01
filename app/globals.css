@@ -228,6 +228,39 @@ input:focus-visible {
 .bg-action, [data-slot="button"][data-variant="default"] { background-image: linear-gradient(120deg, var(--action), var(--brand)); }
 .app-workspace { background-image: radial-gradient(ellipse at 90% 0%, #83d8ff16, transparent 60%); }
 
+.auth-page-shell {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 24px 16px;
+  background: var(--background) url("/landing/math-background.webp") center / cover no-repeat;
+}
+.auth-card {
+  width: min(100%, 480px);
+  gap: 20px;
+  padding-top: 24px;
+  border-radius: 20px;
+  box-shadow: 0 16px 48px color-mix(in oklch, var(--foreground), transparent 90%);
+}
+.auth-card-header { padding-inline: 24px; gap: 10px; text-align: center; }
+.auth-logo { display: block; width: 64px; height: 64px; margin: 0 auto 4px; object-fit: contain; }
+.auth-card-header h1 { font-size: clamp(20px, 3vw, 26px); font-weight: 700; line-height: 1.35; }
+.auth-card-header h1 span { color: var(--primary); }
+.auth-card-content { display: flex; flex-direction: column; gap: 20px; padding-inline: 24px; }
+.auth-wallets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.auth-wallet-button { height: 44px; min-width: 0; gap: 6px; padding-inline: 8px; }
+.auth-wallet-button img { flex-shrink: 0; }
+.auth-switch { text-align: center; }
+.auth-switch a { height: auto; white-space: normal; }
+.auth-card-footer { justify-content: center; gap: 8px; padding: 14px 20px; color: var(--muted-foreground); font-size: 12px; text-align: center; }
+.auth-card-footer svg { width: 16px; height: 16px; flex-shrink: 0; }
+@media (max-width: 420px) {
+  .auth-page-shell { padding: 16px 12px; }
+  .auth-card { padding-top: 20px; }
+  .auth-card-header, .auth-card-content { padding-inline: 20px; }
+  .auth-wallet-button { height: 64px; flex-direction: column; gap: 4px; }
+}
+
 /* Enable color interpolation only for intentional theme changes. */
 .theme-transitioning, .theme-transitioning *, .theme-transitioning *::before, .theme-transitioning *::after {
   transition-property: background-color, color, border-color, box-shadow, fill, stroke, opacity, transform !important;
@@ -236,4 +269,89 @@ input:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   .theme-transitioning, .theme-transitioning *, .theme-transitioning *::before, .theme-transitioning *::after { transition: none !important; }
+}
+
+/* Message rendering follows assistant-ui's standalone Markdown guidance. */
+.chat-markdown {
+  overflow-wrap: anywhere;
+}
+.chat-markdown > * + * { margin-top: 0.75rem; }
+.chat-markdown p { white-space: pre-wrap; }
+.chat-markdown :is(h1, h2, h3, h4, h5, h6) {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.chat-markdown :is(ul, ol) { padding-inline-start: 1.4rem; }
+.chat-markdown ul { list-style: disc; }
+.chat-markdown ol { list-style: decimal; }
+.chat-markdown li + li { margin-top: 0.25rem; }
+.chat-markdown li > p + p { margin-top: 0.5rem; }
+.chat-markdown a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.chat-markdown blockquote { border-inline-start: 3px solid var(--border); padding-inline-start: 0.75rem; color: var(--muted-foreground); }
+.chat-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--muted);
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.chat-markdown :not(pre) > code { border-radius: 0.25rem; background: var(--muted); padding: 0.1rem 0.3rem; font-size: 0.875em; }
+.chat-markdown table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.chat-markdown :is(th, td) { border: 1px solid var(--border); padding: 0.4rem 0.65rem; text-align: start; }
+.chat-markdown th { background: var(--muted); font-weight: 600; }
+.chat-markdown hr { border-color: var(--border); }
+.chat-markdown img { max-width: 100%; height: auto; border-radius: 0.5rem; }
+.chat-markdown .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding-block: 0.25rem; }
+
+/* Keep the compact rail independent of the expanded sidebar's spacing. */
+@layer utilities {
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-sidebar="header"] {
+  height: 64px;
+  padding: 8px 12px;
+  border-bottom: 0;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-sidebar="group"] {
+  padding: 8px 12px 0;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-sidebar="separator"] {
+  display: none;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-sidebar="menu"] {
+  gap: 8px;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar :is([data-sidebar="menu-button"], [data-sidebar="trigger"]) {
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  margin-inline: auto;
+  flex-shrink: 0;
+  justify-content: center;
+  gap: 0;
+  border-radius: 12px;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar :is([data-sidebar="menu-button"], [data-sidebar="trigger"]) > svg {
+  width: 20px;
+  height: 20px;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-sidebar="footer"] {
+  padding: 12px 12px 16px;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-sidebar="footer"] [data-sidebar="menu-button"] {
+  background: transparent;
+  border-radius: 50%;
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-sidebar="footer"] [data-sidebar="menu-button"]:hover {
+  background: var(--sidebar-accent);
+}
+[data-slot="sidebar"][data-collapsible="icon"] .melearn-sidebar [data-slot="avatar"] {
+  width: 32px;
+  height: 32px;
+}
 }

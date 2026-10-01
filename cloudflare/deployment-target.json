@@ -1,0 +1,22 @@
+{
+  "account_id": "ebc73340b6aad96d594e297f148a164f",
+  "worker_name": "melearn-chat",
+  "production_hostname": "chat.melearn.io",
+  "secrets_store_id": "425e455964c1434db8032613229d792d",
+  "runtime_secret_names": {
+    "AI_API_KEY": "MELEARN_CHAT_AI_API_KEY",
+    "TAVILY_API_KEY": "MELEARN_CHAT_TAVILY_API_KEY",
+    "SUPADATA_API_KEY": "MELEARN_CHAT_SUPADATA_API_KEY",
+    "RESEND_API_KEY": "MELEARN_CHAT_RESEND_API_KEY",
+    "SESSION_SECRET": "MELEARN_CHAT_SESSION_SECRET"
+  },
+  "runtime_vars": {
+    "AI_BASE_URL": "https://openrouter.ai/api/v1",
+    "AI_MODEL": "openai/gpt-6-luna-pro",
+    "SOLANA_NETWORK": "devnet",
+    "SOLANA_RPC_URL": "https://api.devnet.solana.com",
+    "PAYMENT_RECIPIENT": "CByHmPLFQsDEoa8WvEGozBjfgMrHx36eGczvsiyCTRbS",
+    "WALLET_AUTH_ORIGIN": "https://chat.melearn.io",
+    "EMAIL_FROM": "Melearn Chat <auth@melearn.io>"
+  }
+}

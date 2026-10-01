@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { jsonError } from "@/lib/http";
-import { LearningError, openConversation } from "@/lib/learning";
+import { LearningError, listChats, openConversation } from "@/lib/learning";
 import { getViewer } from "@/lib/viewer";
+
+export async function GET() {
+  const viewer = await getViewer();
+  if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
+  const db = getDb();
+  const conversations = listChats(db, viewer.ownerType, viewer.ownerId);
+  return NextResponse.json({ conversations });
+}
 
 export async function POST(request: Request) {
   const viewer = await getViewer();

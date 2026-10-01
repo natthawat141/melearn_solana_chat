@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Melearn Architecture Diagram</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot {
+      width: 12px; height: 12px; background: #22d3ee; border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    svg { width: 100%; min-width: 1040px; display: block; }
+    svg text { font-family: 'JetBrains Mono', monospace; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+      padding: 1.25rem;
+    }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.emerald { background: #34d399; }
+    .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>Melearn Architecture</h1>
+      </div>
+      <p class="subtitle">Local demo · Next.js on port 43123 · SQLite is the live store · Cloudflare is prepared, not running</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1120 760">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="arrow-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" />
+          </marker>
+          <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" />
+          </marker>
+          <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#34d399" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- Arrows behind boxes. Endpoints stop at box edges. -->
+        <path d="M188 118 H246" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <path d="M106 150 V170 H500 V150" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <path d="M188 292 C 214 292, 228 227, 246 227" fill="none" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow-rose)"/>
+        <path d="M640 148 V186" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <path d="M351 266 V316" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+        <path d="M585 266 V316" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+        <path d="M351 394 V466" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <path d="M520 394 V466" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <path d="M700 340 C 748 340, 760 110, 790 110" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <path d="M700 370 C 746 370, 758 208, 790 208" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+        <path d="M740 360 H790" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+        <!-- Client -->
+        <rect x="24" y="86" width="164" height="64" rx="6" fill="#0f172a"/>
+        <rect x="24" y="86" width="164" height="64" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="106" y="112" fill="white" font-size="12" font-weight="600" text-anchor="middle">Learner</text>
+        <text x="106" y="130" fill="#94a3b8" font-size="9" text-anchor="middle">Browser</text>
+
+        <rect x="24" y="250" width="164" height="84" rx="6" fill="#0f172a"/>
+        <rect x="24" y="250" width="164" height="84" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="106" y="278" fill="white" font-size="12" font-weight="600" text-anchor="middle">Wallets</text>
+        <text x="106" y="296" fill="#94a3b8" font-size="9" text-anchor="middle">MetaMask · Phantom</text>
+        <text x="106" y="312" fill="#94a3b8" font-size="9" text-anchor="middle">Solflare</text>
+
+        <!-- App boundary -->
+        <rect x="220" y="28" width="520" height="560" rx="12" fill="rgba(251, 191, 36, 0.04)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="236" y="50" fill="#fbbf24" font-size="10" font-weight="600">Next.js app · port 43123</text>
+
+        <rect x="248" y="86" width="206" height="62" rx="6" fill="#0f172a"/>
+        <rect x="248" y="86" width="206" height="62" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="351" y="110" fill="white" font-size="12" font-weight="600" text-anchor="middle">Public UI</text>
+        <text x="351" y="128" fill="#94a3b8" font-size="9" text-anchor="middle">landing · pricing · login</text>
+
+        <rect x="470" y="86" width="230" height="62" rx="6" fill="#0f172a"/>
+        <rect x="470" y="86" width="230" height="62" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="585" y="110" fill="white" font-size="12" font-weight="600" text-anchor="middle">Classroom UI</text>
+        <text x="585" y="128" fill="#94a3b8" font-size="9" text-anchor="middle">learn · chats · profile</text>
+
+        <rect x="248" y="188" width="206" height="78" rx="6" fill="#0f172a"/>
+        <rect x="248" y="188" width="206" height="78" rx="6" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="351" y="216" fill="white" font-size="12" font-weight="600" text-anchor="middle">Auth API</text>
+        <text x="351" y="234" fill="#94a3b8" font-size="9" text-anchor="middle">password · session cookie</text>
+        <text x="351" y="248" fill="#94a3b8" font-size="9" text-anchor="middle">SIWE · SIWS</text>
+
+        <rect x="470" y="188" width="230" height="78" rx="6" fill="#0f172a"/>
+        <rect x="470" y="188" width="230" height="78" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="585" y="216" fill="white" font-size="12" font-weight="600" text-anchor="middle">Learning API</text>
+        <text x="585" y="234" fill="#94a3b8" font-size="9" text-anchor="middle">conversations · answers</text>
+        <text x="585" y="248" fill="#94a3b8" font-size="9" text-anchor="middle">10 messages / 24h</text>
+
+        <rect x="248" y="318" width="206" height="76" rx="6" fill="#0f172a"/>
+        <rect x="248" y="318" width="206" height="76" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="351" y="346" fill="white" font-size="12" font-weight="600" text-anchor="middle">Lesson tutor</text>
+        <text x="351" y="364" fill="#94a3b8" font-size="9" text-anchor="middle">hint · example · practice</text>
+        <text x="351" y="378" fill="#94a3b8" font-size="9" text-anchor="middle">grading stays here</text>
+
+        <rect x="470" y="318" width="230" height="76" rx="6" fill="#0f172a"/>
+        <rect x="470" y="318" width="230" height="76" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="585" y="346" fill="white" font-size="12" font-weight="600" text-anchor="middle">Open replies</text>
+        <text x="585" y="364" fill="#94a3b8" font-size="9" text-anchor="middle">free-form chat only</text>
+        <text x="585" y="378" fill="#94a3b8" font-size="9" text-anchor="middle">falls back to tutor</text>
+
+        <rect x="330" y="468" width="280" height="80" rx="6" fill="#0f172a"/>
+        <rect x="330" y="468" width="280" height="80" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="470" y="498" fill="white" font-size="12" font-weight="600" text-anchor="middle">SQLite</text>
+        <text x="470" y="516" fill="#94a3b8" font-size="9" text-anchor="middle">data/melearn.db</text>
+        <text x="470" y="530" fill="#94a3b8" font-size="8" text-anchor="middle">accounts · chats · progress · quota</text>
+
+        <!-- External -->
+        <rect x="770" y="28" width="320" height="400" rx="12" fill="rgba(148, 163, 184, 0.04)" stroke="#94a3b8" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="786" y="50" fill="#94a3b8" font-size="10" font-weight="600">External services</text>
+
+        <rect x="792" y="78" width="276" height="64" rx="6" fill="#0f172a"/>
+        <rect x="792" y="78" width="276" height="64" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="930" y="104" fill="white" font-size="12" font-weight="600" text-anchor="middle">OpenRouter</text>
+        <text x="930" y="122" fill="#94a3b8" font-size="9" text-anchor="middle">openai/gpt-6-luna-pro</text>
+
+        <rect x="792" y="176" width="276" height="64" rx="6" fill="#0f172a"/>
+        <rect x="792" y="176" width="276" height="64" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="930" y="202" fill="white" font-size="12" font-weight="600" text-anchor="middle">Tavily</text>
+        <text x="930" y="220" fill="#94a3b8" font-size="9" text-anchor="middle">optional · current facts only</text>
+
+        <rect x="792" y="280" width="276" height="100" rx="6" fill="#0f172a"/>
+        <rect x="792" y="280" width="276" height="100" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="930" y="312" fill="white" font-size="12" font-weight="600" text-anchor="middle">Solana devnet</text>
+        <text x="930" y="330" fill="#94a3b8" font-size="9" text-anchor="middle">payment code is present</text>
+        <text x="930" y="346" fill="#94a3b8" font-size="9" text-anchor="middle">demo does not charge</text>
+        <text x="930" y="362" fill="#94a3b8" font-size="8" text-anchor="middle">chat cannot unlock a lesson</text>
+
+        <!-- Prepared cloud, outside the running app -->
+        <rect x="770" y="460" width="320" height="128" rx="12" fill="rgba(120, 53, 15, 0.12)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="786" y="482" fill="#fbbf24" font-size="10" font-weight="600">Prepared · not running</text>
+        <rect x="792" y="498" width="276" height="70" rx="6" fill="#0f172a"/>
+        <rect x="792" y="498" width="276" height="70" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="930" y="524" fill="white" font-size="12" font-weight="600" text-anchor="middle">Cloudflare target</text>
+        <text x="930" y="542" fill="#94a3b8" font-size="9" text-anchor="middle">Workers · D1 · R2 · Workers AI</text>
+        <text x="930" y="556" fill="#fbbf24" font-size="8" text-anchor="middle">export only · no resources created</text>
+
+        <!-- Legend sits below every boundary (app and cloud end at y=588) -->
+        <rect x="24" y="640" width="1066" height="96" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+        <text x="44" y="664" fill="#94a3b8" font-size="9" font-weight="600">LEGEND</text>
+        <rect x="44" y="680" width="14" height="14" rx="3" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="66" y="691" fill="#cbd5e1" font-size="9">Frontend</text>
+        <rect x="180" y="680" width="14" height="14" rx="3" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="202" y="691" fill="#cbd5e1" font-size="9">Backend</text>
+        <rect x="310" y="680" width="14" height="14" rx="3" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="332" y="691" fill="#cbd5e1" font-size="9">Database</text>
+        <rect x="450" y="680" width="14" height="14" rx="3" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="472" y="691" fill="#cbd5e1" font-size="9">Auth</text>
+        <rect x="560" y="680" width="14" height="14" rx="3" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="582" y="691" fill="#cbd5e1" font-size="9">External</text>
+        <rect x="700" y="680" width="14" height="14" rx="3" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="722" y="691" fill="#cbd5e1" font-size="9">Planned cloud</text>
+        <text x="44" y="718" fill="#64748b" font-size="8">Solid lines are the live request path. Dashed lines are optional search, wallet signatures, or payment code that the demo does not charge.</text>
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>What the learner hits</h3>
+        </div>
+        <ul>
+          <li>• Public pages and a lesson preview need no account</li>
+          <li>• Send, hint, example, and practice require a session</li>
+          <li>• Setup is its own page after the first sign-in</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>What stays on the server</h3>
+        </div>
+        <ul>
+          <li>• Hints, practice, and grading never go to the model</li>
+          <li>• Quota, ownership, and entitlements are decided here</li>
+          <li>• Wallet signatures are verified locally</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot amber"></div>
+          <h3>Not the running system</h3>
+        </div>
+        <ul>
+          <li>• Pro pricing is sample copy and does not charge</li>
+          <li>• Accounts and chats live only in SQLite</li>
+          <li>• Workers, D1, R2, and Workers AI are not deployed</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">Melearn Chat · high-level architecture · local demo · 1 October 2026</p>
+  </div>
+</body>
+</html>

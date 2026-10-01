@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["chat.melearn.io"],
   poweredByHeader: false,
   devIndicators: false,
   // This folder is also opened through a symlink of the same path, so Next

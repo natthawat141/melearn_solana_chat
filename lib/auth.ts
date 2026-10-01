@@ -4,7 +4,7 @@ import path from "path";
 import type { AppDatabase } from "@/lib/db";
 import { withTransaction } from "@/lib/db";
 import { nowIso } from "@/lib/format";
-import type { Locale } from "@/lib/types";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/types";
 
 export type Account = {
   id: string;
@@ -14,10 +14,14 @@ export type Account = {
   goal: string | null;
   onboarded: boolean;
   walletAddress: string | null;
+  avatarUrl: string | null;
+  educationStage: string | null;
+  preferredSubject: string | null;
 };
 
 type UserRow = {
   id: string;
+  email: string | null;
   display_name: string;
   password_hash: string;
   locale: string;
@@ -25,6 +29,9 @@ type UserRow = {
   goal: string | null;
   onboarded: number;
   wallet_address: string | null;
+  avatar_url?: string | null;
+  education_stage?: string | null;
+  preferred_subject?: string | null;
 };
 
 function secret() {
@@ -81,11 +88,14 @@ function toAccount(row: UserRow): Account {
   return {
     id: row.id,
     displayName: row.display_name,
-    locale: row.locale === "en" ? "en" : "th",
+    locale: row.locale === "th" ? "th" : DEFAULT_LOCALE,
     level: row.level,
     goal: row.goal,
     onboarded: Boolean(row.onboarded),
     walletAddress: row.wallet_address,
+    avatarUrl: row.avatar_url ?? null,
+    educationStage: row.education_stage ?? null,
+    preferredSubject: row.preferred_subject ?? null,
   };
 }
 
@@ -95,9 +105,12 @@ export function findUser(db: AppDatabase, id: string) {
 }
 
 export function findUserByName(db: AppDatabase, name: string) {
-  const row = db.prepare("SELECT * FROM users WHERE display_name = ?").get(name.trim()) as UserRow | undefined;
+  const clean = name.trim();
+  const row = db.prepare("SELECT * FROM users WHERE display_name = ? OR email = ? COLLATE NOCASE").get(clean, clean) as UserRow | undefined;
   return row ?? null;
 }
+
+export const findUserByNameOrEmail = findUserByName;
 
 export function migrateGuest(db: AppDatabase, guestId: string, userId: string) {
   const progress = db.prepare("SELECT lesson_id FROM progress WHERE owner_type = 'guest' AND owner_id = ?").all(guestId) as Array<{ lesson_id: string }>;
@@ -121,7 +134,7 @@ export function migrateGuest(db: AppDatabase, guestId: string, userId: string) {
   }
 }
 
-export function registerUser(db: AppDatabase, input: { displayName: string; password: string; guestId: string; locale: Locale; level: string | null; goal: string | null; onboarded: boolean }) {
+export function registerUser(db: AppDatabase, input: { displayName: string; password: string; guestId: string; locale: Locale; level: string | null; goal: string | null; onboarded: boolean; email?: string }) {
   const name = input.displayName.trim();
   if (!name || name.length > 40) throw new Error("NAME");
   if (input.password.length < 4 || input.password.length > 72) throw new Error("PASSWORD");
@@ -129,26 +142,67 @@ export function registerUser(db: AppDatabase, input: { displayName: string; pass
   const id = crypto.randomUUID();
   withTransaction(db, () => {
     db.prepare(
-      "INSERT INTO users (id, display_name, password_hash, locale, level, goal, onboarded, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    ).run(id, name, hashPassword(input.password), input.locale, input.level, input.goal, input.onboarded ? 1 : 0, nowIso());
+      "INSERT INTO users (id, display_name, password_hash, locale, level, goal, onboarded, email, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    ).run(id, name, hashPassword(input.password), input.locale, input.level, input.goal, input.onboarded ? 1 : 0, input.email || null, nowIso());
     migrateGuest(db, input.guestId, id);
   });
   return findUser(db, id)!;
 }
 
+export function registerVerifiedUser(db: AppDatabase, input: {
+  email: string;
+  displayName?: string;
+  password?: string;
+  passwordHash?: string;
+  guestId: string;
+  locale: Locale;
+}) {
+  const email = input.email.trim().toLowerCase();
+  let name = input.displayName?.trim() || email.split("@")[0] || email;
+  if (name.length > 40) name = name.slice(0, 40);
+  if (findUserByName(db, name)) {
+    name = `${name.slice(0, 32)}_${crypto.randomBytes(3).toString("hex")}`;
+  }
+  const hash = input.passwordHash || (input.password ? hashPassword(input.password) : null);
+  if (!hash) throw new Error("PASSWORD");
+  const id = crypto.randomUUID();
+  withTransaction(db, () => {
+    db.prepare(
+      "INSERT INTO users (id, display_name, email, email_verified, password_hash, locale, level, goal, onboarded, created_at) VALUES (?, ?, ?, 1, ?, ?, NULL, NULL, 0, ?)"
+    ).run(id, name, email, hash, input.locale, nowIso());
+    migrateGuest(db, input.guestId, id);
+  });
+  return findUser(db, id)!;
+}
+
+export function resetUserPassword(db: AppDatabase, email: string, newPassword: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  const user = findUserByNameOrEmail(db, cleanEmail);
+  if (!user) throw new Error("USER_NOT_FOUND");
+  if (newPassword.length < 6 || newPassword.length > 72) throw new Error("PASSWORD");
+  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(newPassword), user.id);
+  return user;
+}
+
+function canonicalWalletAddress(publicKey: string) {
+  return /^0x[a-fA-F0-9]{40}$/.test(publicKey) ? publicKey.toLowerCase() : publicKey;
+}
+
 export function loginWithWallet(db: AppDatabase, input: { publicKey: string; guestId: string; locale: Locale }) {
-  const existing = db.prepare("SELECT * FROM users WHERE wallet_address = ?").get(input.publicKey) as UserRow | undefined;
+  const publicKey = canonicalWalletAddress(input.publicKey);
+  const existing = db.prepare("SELECT * FROM users WHERE wallet_address = ?").get(publicKey) as UserRow | undefined;
   if (existing) {
     withTransaction(db, () => migrateGuest(db, input.guestId, existing.id));
     return findUser(db, existing.id)!;
   }
-  let name = `${input.publicKey.slice(0, 4)}…${input.publicKey.slice(-4)}`;
-  if (findUserByName(db, name)) name = input.publicKey.slice(0, 16);
+  let name = `${publicKey.slice(0, 4)}…${publicKey.slice(-4)}`;
+  if (findUserByName(db, name)) name = publicKey.slice(0, 16);
+  if (findUserByName(db, name)) name = `${publicKey.slice(0, 6)}…${crypto.randomBytes(3).toString("hex")}`;
   const id = crypto.randomUUID();
   withTransaction(db, () => {
     db.prepare(
       "INSERT INTO users (id, display_name, password_hash, locale, level, goal, onboarded, wallet_address, created_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)",
-    ).run(id, name, hashPassword(crypto.randomBytes(24).toString("hex")), input.locale, input.publicKey, nowIso());
+    ).run(id, name, hashPassword(crypto.randomBytes(24).toString("hex")), input.locale, publicKey, nowIso());
     migrateGuest(db, input.guestId, id);
   });
   return findUser(db, id)!;
@@ -159,4 +213,44 @@ export function loginUser(db: AppDatabase, input: { displayName: string; passwor
   if (!row || !verifyPassword(input.password, row.password_hash)) throw new Error("INVALID");
   withTransaction(db, () => migrateGuest(db, input.guestId, row.id));
   return findUser(db, row.id)!;
+}
+
+export function loginWithGoogle(db: AppDatabase, input: {
+  googleUid: string;
+  displayName: string | null;
+  photoUrl: string | null;
+  guestId: string;
+  locale: Locale;
+}) {
+  if (!input.googleUid || input.googleUid.length > 128) throw new Error("GOOGLE_UID");
+  const existing = db.prepare("SELECT id FROM users WHERE google_uid = ?").get(input.googleUid) as { id: string } | undefined;
+  if (existing) {
+    withTransaction(db, () => migrateGuest(db, input.guestId, existing.id));
+    return findUser(db, existing.id)!;
+  }
+
+  const baseName = input.displayName?.replace(/[\r\n\u0000-\u001f]/g, " ").trim().slice(0, 40) || "Google learner";
+  let displayName = baseName;
+  if (findUserByName(db, displayName)) {
+    const suffix = ` ·${input.googleUid.slice(0, 8)}`;
+    displayName = `${baseName.slice(0, 40 - suffix.length)}${suffix}`;
+  }
+  if (findUserByName(db, displayName)) displayName = `Learner ${crypto.randomBytes(6).toString("hex")}`;
+
+  const id = crypto.randomUUID();
+  const avatarUrl = input.photoUrl && /^https:\/\//i.test(input.photoUrl) ? input.photoUrl.slice(0, 2048) : null;
+  try {
+    withTransaction(db, () => {
+      db.prepare(
+        "INSERT INTO users (id, display_name, password_hash, locale, level, goal, onboarded, wallet_address, google_uid, avatar_url, created_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, NULL, ?, ?, ?)",
+      ).run(id, displayName, hashPassword(crypto.randomBytes(32).toString("hex")), input.locale, input.googleUid, avatarUrl, nowIso());
+      migrateGuest(db, input.guestId, id);
+    });
+    return findUser(db, id)!;
+  } catch (error) {
+    const raced = db.prepare("SELECT id FROM users WHERE google_uid = ?").get(input.googleUid) as { id: string } | undefined;
+    if (!raced) throw error;
+    withTransaction(db, () => migrateGuest(db, input.guestId, raced.id));
+    return findUser(db, raced.id)!;
+  }
 }

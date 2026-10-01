@@ -1,4 +1,5 @@
 export type Locale = "th" | "en";
+export const DEFAULT_LOCALE: Locale = "en";
 export type OwnerType = "user" | "guest";
 export type LessonAccess = "free" | "paid";
 export type ProgressStatus = "not_started" | "in_progress" | "completed";

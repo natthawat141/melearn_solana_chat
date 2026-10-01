@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { validEducationStage, validPreferredSubject } from "@/lib/learning-profile";
 import { tutorMode } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { jsonError } from "@/lib/http";
@@ -28,9 +29,13 @@ export async function PATCH(request: Request) {
     goal?: string | null;
     onboarded?: boolean;
     displayName?: string;
+    educationStage?: string | null;
+    preferredSubject?: string | null;
   } | null;
   if (!body) return jsonError(viewer.locale, 400, "NAME");
   if (!viewer.user && body.onboarded !== undefined) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
+  if ((body.educationStage !== undefined && !validEducationStage(body.educationStage)) || (body.preferredSubject !== undefined && !validPreferredSubject(body.preferredSubject))) return jsonError(viewer.locale, 400, "LEARNING_PROFILE_INVALID");
+  if (!viewer.user && (body.educationStage !== undefined || body.preferredSubject !== undefined)) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const locale = body.locale === "en" || body.locale === "th" ? body.locale : undefined;
   const level = body.level === null ? null : body.level && levels.has(body.level) ? body.level : undefined;
   const goal = body.goal === null ? null : body.goal && goals.has(body.goal) ? body.goal : undefined;
@@ -48,7 +53,9 @@ export async function PATCH(request: Request) {
          level = CASE WHEN ? THEN NULL ELSE COALESCE(?, level) END,
          goal = CASE WHEN ? THEN NULL ELSE COALESCE(?, goal) END,
          onboarded = COALESCE(?, onboarded),
-         display_name = COALESCE(?, display_name)
+         display_name = COALESCE(?, display_name),
+         education_stage = CASE WHEN ? THEN ? ELSE education_stage END,
+         preferred_subject = CASE WHEN ? THEN ? ELSE preferred_subject END
        WHERE id = ?`,
     ).run(
       locale ?? null,
@@ -58,6 +65,10 @@ export async function PATCH(request: Request) {
       goal === undefined ? null : goal,
       body.onboarded === undefined ? null : body.onboarded ? 1 : 0,
       name || null,
+      body.educationStage !== undefined ? 1 : 0,
+      body.educationStage ?? null,
+      body.preferredSubject !== undefined ? 1 : 0,
+      body.preferredSubject ?? null,
       viewer.user.id,
     );
   } else {
