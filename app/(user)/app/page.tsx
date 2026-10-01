@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getLesson, lessonTitle, teacherImage, teacherPersona, teachers } from "@/lib/content";
 import { getDb } from "@/lib/db";
 import { formatWhen } from "@/lib/format";
@@ -16,95 +15,46 @@ export default async function HomePage() {
   const latest = viewer.user ? (await listLearning(await getDb(), "user", viewer.user.id))[0] : undefined;
   const lesson = latest ? getLesson(latest.lesson_id) : null;
   const teacher = lesson ? teachers.find((item) => item.id === lesson.teacherId) : null;
-  const availableTeachers = teachers.filter((item) => item.mvpEnabled);
-  const upcomingTeachers = teachers.filter((item) => !item.mvpEnabled);
+  const orderedTeachers = [...teachers].sort((a, b) => Number(b.mvpEnabled) - Number(a.mvpEnabled));
 
   return (
-    <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-8 px-5 pt-8">
+    <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-7 px-5 py-7 md:px-8 md:py-10">
       <div className="flex flex-col gap-2">
-        <h1 className="max-w-xl">{t(viewer.locale, "home.title")}</h1>
+        <h1 className="max-w-xl text-2xl! font-semibold!">{t(viewer.locale, "home.title")}</h1>
         <p className="max-w-2xl text-muted-foreground">{t(viewer.locale, "home.lead")}</p>
       </div>
       {viewer.user && latest && lesson && teacher ? (
-        <Card>
-          <CardHeader>
-            <CardDescription>
-              {t(viewer.locale, "continue.with")} {teacher.name[viewer.locale]}
-            </CardDescription>
+        <Card className="gap-4 rounded-xl bg-sidebar-accent/30 p-5 shadow-none ring-1 ring-border sm:flex-row sm:items-center sm:justify-between">
+          <CardHeader className="min-w-0 flex-1 px-0">
             <CardTitle>{lessonTitle(lesson, viewer.locale)}</CardTitle>
-            <CardDescription>
-              {teacher.subject[viewer.locale]} · {formatWhen(latest.updated_at, viewer.locale)}
-            </CardDescription>
+            <CardDescription>{t(viewer.locale, "continue.with")} {teacher.name[viewer.locale]} · {formatWhen(latest.updated_at, viewer.locale)}</CardDescription>
           </CardHeader>
-          <CardFooter>
-            <Button asChild className="min-h-11">
-              <Link href={`/learn/${lesson.id}`}>
-                {latest.status === "completed" ? t(viewer.locale, "teacher.review") : t(viewer.locale, "home.continue")}
-              </Link>
-            </Button>
-          </CardFooter>
+          <Button asChild className="h-10 shrink-0"><Link href={`/learn/${lesson.id}`}>{latest.status === "completed" ? t(viewer.locale, "teacher.review") : t(viewer.locale, "home.continue")}</Link></Button>
         </Card>
       ) : null}
       <section className="flex flex-col gap-4">
-        <h2>{t(viewer.locale, "home.teachers")}</h2>
-        <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 lg:grid-cols-3">
-          {availableTeachers.map((item) => {
+        <h2 className="text-lg! font-medium!">{t(viewer.locale, "home.teachers")}</h2>
+        <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {orderedTeachers.map((item) => {
             const image = teacherImage(item);
             return (
-              <Card key={item.id} className="pt-0">
-                {image ? (
-                  <div className="relative aspect-[4/3] w-full" style={{ background: item.accentBackground }}>
-                    <Image src={image} alt={item.name[viewer.locale]} fill sizes="(max-width: 768px) 100vw, 320px" className="object-cover" style={{ objectPosition: "50% 20%" }} />
-                  </div>
-                ) : (
-                  <div className="grid aspect-square w-full place-items-center bg-muted text-5xl font-semibold" aria-hidden>
-                    {item.name.en.replace("Teacher ", "").slice(0, 1)}
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle>{item.name[viewer.locale]}</CardTitle>
+              <Card key={item.id} className="h-full gap-4 rounded-xl pt-0 shadow-none ring-1 ring-border">
+                <div className="relative h-44 w-full overflow-hidden bg-sidebar-accent" style={image ? { background: item.accentBackground } : undefined}>
+                  {image ? <Image src={image} alt={item.name[viewer.locale]} fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 320px" className="object-cover" style={{ objectPosition: "50% 20%" }} /> : <div className="grid h-full place-items-center text-4xl font-semibold text-sidebar-accent-foreground" aria-hidden>{item.name.en.replace("Teacher ", "").slice(0, 1)}</div>}
+                </div>
+                <CardHeader className="gap-1 px-5">
+                  <div className="flex min-w-0 items-start justify-between gap-2"><CardTitle className="min-w-0">{item.name[viewer.locale]}</CardTitle>{!item.mvpEnabled ? <Badge variant="secondary" className="shrink-0">{t(viewer.locale, "teacher.soon")}</Badge> : null}</div>
                   <CardDescription>{item.subject[viewer.locale]}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="line-clamp-3">{teacherPersona(item, viewer.locale)}</p>
-                </CardContent>
-                <CardFooter className="mt-auto">
-                  {item.mvpEnabled ? (
-                    <Button asChild className="min-h-11">
-                      <Link href={`/teachers/${item.id}`}>{t(viewer.locale, "home.pick")}</Link>
-                    </Button>
-                  ) : (
-                    <Badge variant="outline">{t(viewer.locale, "teacher.soon")}</Badge>
-                  )}
+                <CardContent className="px-5"><p className="line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-muted-foreground">{teacherPersona(item, viewer.locale)}</p></CardContent>
+                <CardFooter className="mt-auto border-0 bg-transparent px-5 pb-5 pt-0">
+                  {item.mvpEnabled ? <Button asChild className="h-11 w-full"><Link href={`/teachers/${item.id}`}>{t(viewer.locale, "home.pick")}</Link></Button> : <Button variant="outline" disabled className="h-11 w-full">{t(viewer.locale, "teacher.soon")}</Button>}
                 </CardFooter>
               </Card>
             );
           })}
         </div>
       </section>
-      {upcomingTeachers.length > 0 ? (
-        <section className="flex flex-col gap-4" aria-labelledby="upcoming-teachers-heading">
-          <h2 id="upcoming-teachers-heading">{t(viewer.locale, "home.upcomingTeachers")}</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {upcomingTeachers.map((item) => {
-              const image = teacherImage(item);
-              return (
-                <Card key={item.id} className="flex flex-row items-center gap-3 px-4 py-3">
-                  <Avatar className="size-12 shrink-0">
-                    {image ? <AvatarImage src={image} alt="" /> : null}
-                    <AvatarFallback>{item.name[viewer.locale].slice(0, 1)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-base">{item.name[viewer.locale]}</CardTitle>
-                    <CardDescription>{item.subject[viewer.locale]}</CardDescription>
-                  </div>
-                  <Badge variant="outline">{t(viewer.locale, "teacher.soon")}</Badge>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
     </div>
   );
 }

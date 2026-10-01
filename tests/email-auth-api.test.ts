@@ -88,7 +88,7 @@ test("email OTP registration and password reset API lifecycle", async (t) => {
 
   // Insert code into DB directly as issueEmailOtp would
   const { issueEmailOtp } = await import("../lib/email-service");
-  const issuedCode = issueEmailOtp(db, testEmail, "verify_email", { password: testPass, displayName: "Learner Bill" });
+  const issuedCode = await issueEmailOtp(db, testEmail, "verify_email", { password: testPass, displayName: "Learner Bill" });
   assert.match(issuedCode, /^\d{6}$/);
 
   // 5. Verify OTP with wrong code
@@ -108,11 +108,11 @@ test("email OTP registration and password reset API lifecycle", async (t) => {
   assert.equal(validVerifyRes.body.user.displayName, "Learner Bill");
   assert.ok(validVerifyRes.cookie?.value);
 
-  const sessionId = readSession(validVerifyRes.cookie.value);
+  const sessionId = await readSession(validVerifyRes.cookie.value);
   assert.equal(sessionId, validVerifyRes.body.user.id);
 
   // Verify user in db has email_verified = 1
-  const dbUser = db.prepare("SELECT * FROM users WHERE email = ?").get(testEmail) as { email_verified: number | string };
+  const dbUser = await db.prepare("SELECT * FROM users WHERE email = ?").get(testEmail) as { email_verified: number | string };
   assert.equal(Number(dbUser.email_verified), 1);
 
   // 7. Password reset request
@@ -120,7 +120,7 @@ test("email OTP registration and password reset API lifecycle", async (t) => {
   const requestedReset = await call(requestReset, "/api/auth/password-reset/request", { email: "Learner Bill" });
   assert.equal(requestedReset.response.status, 200);
   assert.equal(requestedReset.body.email, testEmail);
-  const resetCode = (db.prepare("SELECT code FROM email_codes WHERE email = ? AND type = ? AND used_at IS NULL").get(testEmail, "reset_password") as { code: string }).code;
+  const resetCode = ((await db.prepare("SELECT code FROM email_codes WHERE email = ? AND type = ? AND used_at IS NULL").get(testEmail, "reset_password")) as { code: string }).code;
   assert.match(resetCode, /^\d{6}$/);
 
   // 8. Confirm reset with short password
@@ -142,7 +142,7 @@ test("email OTP registration and password reset API lifecycle", async (t) => {
   assert.ok(validResetRes.cookie?.value);
 
   // 10. Login with new password works
-  const loggedIn = loginUser(db, {
+  const loggedIn = await loginUser(db, {
     displayName: testEmail,
     password: "newSecurePassword456",
     guestId: "guest-test-2",

@@ -14,6 +14,10 @@ const noto = Noto_Sans_Thai({
 });
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
   themeColor: "#eaf7ff",
 };
 

@@ -11,7 +11,7 @@ export default async function ChatsPage() {
       <h1>{t(viewer.locale, "chats.title")}</h1>
       <p className="max-w-md text-muted-foreground">{viewer.user ? t(viewer.locale, "history.pick") : t(viewer.locale, "chats.guestBody")}</p>
       <Button asChild className="min-h-11">
-        <Link href="/app">{t(viewer.locale, "history.new")}</Link>
+        <Link href="/chat/new">{t(viewer.locale, "history.new")}</Link>
       </Button>
     </div>
   );

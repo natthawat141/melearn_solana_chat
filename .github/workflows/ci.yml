@@ -33,5 +33,4 @@ jobs:
       - run: npm test
       - run: npm run typecheck
 
-# Deployment is managed separately in Cloudflare Workers Builds once the
-# Workers adapter and D1/R2 migration are ready. No production secrets here.
+# This workflow checks the repository. It does not deploy and it has no production credentials.

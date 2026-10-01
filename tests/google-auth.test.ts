@@ -43,35 +43,35 @@ test("Firebase rejects non-Google, disabled, and unavailable identities", async 
   } finally { globalThis.fetch = originalFetch; }
 });
 
-test("Google UID keeps one Melearn account, avoids username collisions, and migrates guest progress", () => {
+test("Google UID keeps one Melearn account, avoids username collisions, and migrates guest progress", async () => {
   const db = openDatabase(":memory:");
   try {
-    const passwordUser = registerUser(db, {
+    const passwordUser = await registerUser(db, {
       displayName: "Ada Learner", password: "pass1234", guestId: "guest-password", locale: "th", level: null, goal: null, onboarded: false,
     });
-    db.prepare("INSERT INTO progress (owner_type, owner_id, lesson_id, lesson_version, status, updated_at) VALUES ('guest', ?, 'lesson-1', 1, 'started', ?)")
+    await db.prepare("INSERT INTO progress (owner_type, owner_id, lesson_id, lesson_version, status, updated_at) VALUES ('guest', ?, 'lesson-1', 1, 'started', ?)")
       .run("guest-google", new Date().toISOString());
 
-    const first = loginWithGoogle(db, {
+    const first = await loginWithGoogle(db, {
       googleUid: "google-account-uid", displayName: "Ada Learner", photoUrl: "https://lh3.googleusercontent.com/first.png", guestId: "guest-google", locale: "en",
     });
     assert.notEqual(first.id, passwordUser.id);
     assert.notEqual(first.displayName, passwordUser.displayName);
     assert.equal(first.avatarUrl, "https://lh3.googleusercontent.com/first.png");
-    assert.equal(db.prepare("SELECT owner_id FROM progress WHERE lesson_id = 'lesson-1'").get()?.owner_id, first.id);
+    assert.equal((await db.prepare("SELECT owner_id FROM progress WHERE lesson_id = 'lesson-1'").get<{ owner_id: string }>())?.owner_id, first.id);
 
-    db.prepare("UPDATE users SET display_name = ?, avatar_url = ? WHERE id = ?").run("My chosen name", "https://example.com/custom.png", first.id);
-    const next = loginWithGoogle(db, {
+    await db.prepare("UPDATE users SET display_name = ?, avatar_url = ? WHERE id = ?").run("My chosen name", "https://example.com/custom.png", first.id);
+    const next = await loginWithGoogle(db, {
       googleUid: "google-account-uid", displayName: "Changed Google name", photoUrl: "https://lh3.googleusercontent.com/second.png", guestId: "guest-google-2", locale: "en",
     });
     assert.equal(next.id, first.id);
     assert.equal(next.displayName, "My chosen name");
     assert.equal(next.avatarUrl, "https://example.com/custom.png");
-    assert.equal((db.prepare("SELECT count(*) AS n FROM users").get() as { n: number }).n, 2);
+    assert.equal(((await db.prepare("SELECT count(*) AS n FROM users").get()) as { n: number }).n, 2);
   } finally { db.close(); }
 });
 
-test("opening an existing SQLite account database adds the Google identity column", () => {
+test("opening an existing SQLite account database adds the Google identity column", async () => {
   const directory = mkdtempSync(join(tmpdir(), "melearn-google-auth-"));
   const filename = join(directory, "legacy.sqlite");
   const legacy = new DatabaseSync(filename);
@@ -80,7 +80,7 @@ test("opening an existing SQLite account database adds the Google identity colum
   try {
     const db = openDatabase(filename);
     try {
-      const columns = db.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+      const columns = await db.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
       assert.ok(columns.some((column) => column.name === "google_uid"));
       assert.ok(columns.some((column) => column.name === "avatar_url"));
       assert.ok(columns.some((column) => column.name === "education_stage"));

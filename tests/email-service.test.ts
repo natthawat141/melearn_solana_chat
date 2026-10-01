@@ -29,29 +29,25 @@ test("isValidPassword enforces reasonable security length", () => {
   assert.equal(isValidPassword(""), false);
 });
 
-test("issueEmailOtp and verifyEmailOtp handle valid, invalid, and expired codes", () => {
+test("issueEmailOtp and verifyEmailOtp handle valid, invalid, and expired codes", async () => {
   const db = openDatabase(":memory:");
 
   const email = "learner@example.com";
-  const code = issueEmailOtp(db, email, "verify_email", { test: true }, 10);
+  const code = await issueEmailOtp(db, email, "verify_email", { test: true }, 10);
   assert.match(code, /^\d{6}$/);
 
-  // Wrong code
-  const wrongRes = verifyEmailOtp(db, email, "000000", "verify_email");
+  const wrongRes = await verifyEmailOtp(db, email, "000000", "verify_email");
   assert.equal(wrongRes.ok, false);
   assert.equal(wrongRes.error, "INVALID_CODE");
 
-  // Wrong type
-  const wrongType = verifyEmailOtp(db, email, code, "reset_password");
+  const wrongType = await verifyEmailOtp(db, email, code, "reset_password");
   assert.equal(wrongType.ok, false);
 
-  // Correct code
-  const validRes = verifyEmailOtp(db, email, code, "verify_email");
+  const validRes = await verifyEmailOtp(db, email, code, "verify_email");
   assert.equal(validRes.ok, true);
   assert.equal(validRes.payload?.test, true);
 
-  // Second attempt (already used)
-  const replayRes = verifyEmailOtp(db, email, code, "verify_email");
+  const replayRes = await verifyEmailOtp(db, email, code, "verify_email");
   assert.equal(replayRes.ok, false);
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { FieldDescription, FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field";
+import { PreferenceChoices } from "@/components/preference-choices";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
 
@@ -27,41 +27,13 @@ export function LearningPreferences({
     <FieldGroup>
       <FieldSet disabled={disabled}>
         <FieldLegend>{t(locale, "onboarding.level")}</FieldLegend>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          value={level}
-          onValueChange={(value) => {
-            if (value) onLevel(value);
-          }}
-          className="w-full flex-wrap justify-start"
-          aria-label={t(locale, "onboarding.level")}
-        >
-          {levels.map((item) => (
-            <ToggleGroupItem key={item} value={item} className="min-h-11">
-              {t(locale, `level.${item}`)}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <FieldDescription>{t(locale, "onboarding.levelHint")}</FieldDescription>
+        <PreferenceChoices options={levels.map(value => ({ value, label: t(locale, `level.${value}`) }))} value={level} onChange={value => { if (value) onLevel(value); }} label={t(locale, "onboarding.level")} disabled={disabled} />
       </FieldSet>
       <FieldSet disabled={disabled}>
         <FieldLegend>{t(locale, "onboarding.goal")}</FieldLegend>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          value={goal}
-          onValueChange={(value) => {
-            if (value) onGoal(value);
-          }}
-          className="w-full flex-wrap justify-start"
-          aria-label={t(locale, "onboarding.goal")}
-        >
-          {goals.map((item) => (
-            <ToggleGroupItem key={item} value={item} className="min-h-11">
-              {t(locale, `goal.${item}`)}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <FieldDescription>{t(locale, "onboarding.goalHint")}</FieldDescription>
+        <PreferenceChoices options={goals.map(value => ({ value, label: t(locale, `goal.${value}`) }))} value={goal} onChange={value => { if (value) onGoal(value); }} label={t(locale, "onboarding.goal")} disabled={disabled} />
       </FieldSet>
     </FieldGroup>
   );

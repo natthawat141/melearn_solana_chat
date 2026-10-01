@@ -82,7 +82,9 @@ export async function issueWalletLogin(db: AppDatabase, input: WalletInput, orig
   };
   const message = wallet.chain === "ETH"
     ? new SiweMessage({ ...fields, address: getAddress(wallet.publicKey), chainId: input.chainId! }).prepareMessage()
-    : createSignInMessageText({ ...fields, chainId: "solana:devnet" });
+    // Identity proof is independent of the wallet's selected Solana network.
+    // Phantom rejects a devnet SIWS challenge when the wallet is on mainnet.
+    : createSignInMessageText(fields);
   await db.prepare("INSERT INTO wallet_challenges (nonce, user_id, message, expires_at, used) VALUES (?, ?, ?, ?, 0)").run(nonce, wallet.publicKey, message, expiresAt);
   return { nonce, message, expiresAt };
 }
@@ -104,7 +106,7 @@ export async function completeWalletLogin(
     parsed.expirationTime !== challenge.expires_at || parsed.requestId !== browserBinding(input.guestId) ||
     !parsed.issuedAt || !Number.isFinite(Date.parse(parsed.issuedAt)) || Date.parse(parsed.issuedAt) > Date.now() + 30_000 ||
     Date.parse(challenge.expires_at) - Date.parse(parsed.issuedAt) > CHALLENGE_TTL + 1000 || Date.parse(parsed.issuedAt) >= Date.parse(challenge.expires_at) ||
-    (wallet.chain === "SOL" && parsed.chainId !== "solana:devnet")) fail("CHALLENGE_MISMATCH", "challenge");
+    (wallet.chain === "SOL" && parsed.chainId !== undefined)) fail("CHALLENGE_MISMATCH", "challenge");
   try {
     if (wallet.chain === "ETH") {
       if (!/^0x[a-fA-F0-9]{130}$/.test(input.signature)) fail("SIGNATURE_INVALID", "signature");
@@ -117,7 +119,7 @@ export async function completeWalletLogin(
       const signature = bs58.decode(input.signature);
       const publicKey = Uint8Array.from(getAddressEncoder().encode(address(wallet.publicKey)));
       if (signature.length !== 64 || !verifySignIn(parsed as NonNullable<ReturnType<typeof parseSignInMessageText>>, {
-        account: { address: wallet.publicKey, publicKey, chains: ["solana:devnet"], features: ["solana:signMessage"] },
+        account: { address: wallet.publicKey, publicKey, chains: [], features: ["solana:signMessage"] },
         signedMessage: new TextEncoder().encode(challenge.message), signature, signatureType: "ed25519",
       })) fail("SIGNATURE_INVALID", "signature");
     }

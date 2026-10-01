@@ -1,5 +1,6 @@
-# Suggested backend contract — provider-neutral
-This is an implementation proposal, not production-ready payment code. Choose stack/SDK against current official docs during implementation.
+# Payment and data notes
+
+The purchase routes in `app/api/purchases` and the checks in `lib/verify-transfer.ts` follow this design. The public demo does not charge. Read those files for the current behavior.
 
 ## Entities
 User(id, displayName?, locale, level); Teacher(id, enabled); Lesson(id, teacherId, access, version); Conversation(id, userId/guestId, teacherId, lessonId); Message(id, conversationId, role, text, clientMessageId, createdAt); Progress(userId, lessonId, lessonVersion, status, attempts, hintsUsed, rubricScores, updatedAt); Purchase(id, userId, lessonId, priceAtomic, mint, network, recipient, status, signature?); Entitlement(userId, lessonId, purchaseId, startsAt, expiresAt?).

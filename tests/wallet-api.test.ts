@@ -61,7 +61,7 @@ test("wallet route handlers issue local challenges, set sessions, reject replay 
       const proof = { ...wallet, nonce: issued.body.nonce, signature };
       const signedIn = await call(verify, "/api/auth/wallet", proof, guest);
       assert.equal(signedIn.response.status, 200);
-      assert.equal(readSession(signedIn.cookie?.value), signedIn.body.user.id);
+      assert.equal(await readSession(signedIn.cookie?.value), signedIn.body.user.id);
       assert.equal(signedIn.cookie?.httpOnly, true);
       assert.equal(signedIn.cookie?.sameSite, "lax");
       assert.equal(signedIn.body.user.onboarded, false);
@@ -79,7 +79,7 @@ test("wallet route handlers issue local challenges, set sessions, reject replay 
     assert.equal(limited.response.status, 429);
     assert.equal(limited.response.headers.get("retry-after"), "60");
     assert.equal(limited.body.diagnostic.reason, "WALLET_RATE_LIMIT");
-    assert.equal((db.prepare("SELECT count(*) AS n FROM users").get() as { n: number }).n, 3);
+    assert.equal(((await db.prepare("SELECT count(*) AS n FROM users").get()) as { n: number }).n, 3);
   } finally {
     process.chdir(previousCwd);
     if (previousSecret === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = previousSecret;

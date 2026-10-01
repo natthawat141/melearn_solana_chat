@@ -32,7 +32,7 @@ test("MetaMask discovery selects MetaMask beside other providers and signs the S
     const connected = await connectLoginWallet("metamask");
     assert.ok(connected);
     assert.equal(connected.chainId, 137);
-    const issued = issueWalletLogin(db, connected, origin, guestId);
+    const issued = await issueWalletLogin(db, connected, origin, guestId);
     const signature = await connected.signMessage(issued.message);
     assert.ok(signature);
     const user = await completeWalletLogin(db, { ...connected, nonce: issued.nonce, signature, guestId, origin, locale: "th" });
@@ -65,12 +65,12 @@ test("Phantom and Solflare buttons connect and sign with the selected wallet whe
       const connected = await connectLoginWallet(walletName as "phantom" | "solflare");
       assert.ok(connected);
       assert.equal(connected.publicKey, bs58.encode(pairs[index].publicKey));
-      const issued = issueWalletLogin(db, connected, origin, guestId);
+      const issued = await issueWalletLogin(db, connected, origin, guestId);
       const signature = await connected.signMessage(issued.message);
       assert.ok(signature);
       const user = await completeWalletLogin(db, { ...connected, nonce: issued.nonce, signature, guestId, origin, locale: "th" });
       assert.equal(user.walletAddress, connected.publicKey);
     }
-    assert.equal((db.prepare("SELECT count(*) AS n FROM users").get() as { n: number }).n, 2);
+    assert.equal(((await db.prepare("SELECT count(*) AS n FROM users").get()) as { n: number }).n, 2);
   } finally { unregister(); db.close(); }
 });

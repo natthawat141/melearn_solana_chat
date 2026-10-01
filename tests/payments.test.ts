@@ -53,18 +53,18 @@ test("server transaction encodes the quoted lamports and purchase memo", () => {
 test("cancel and chat text do not grant access, and confirm is idempotent", async () => {
   const db = openDatabase(":memory:");
   const userId = "user-1";
-  db.prepare("INSERT INTO users (id, display_name, password_hash, locale, onboarded, created_at) VALUES (?, ?, ?, 'th', 1, ?)").run(
+  await db.prepare("INSERT INTO users (id, display_name, password_hash, locale, onboarded, created_at) VALUES (?, ?, ?, 'th', 1, ?)").run(
     userId,
     "Dul",
     hashPassword("secret"),
     nowIso(),
   );
-  const purchase = createPurchase(db, userId, "english-cafe-01");
-  const cancelled = cancelPurchase(db, userId, purchase.id);
+  const purchase = await createPurchase(db, userId, "english-cafe-01");
+  const cancelled = await cancelPurchase(db, userId, purchase.id);
   assert.equal(cancelled.status, "cancelled");
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM entitlements").get()?.n, 0);
+  assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM entitlements").get<{ n: number }>())?.n, 0);
 
-  const opened = openConversation(db, { ownerType: "user", ownerId: userId, lessonId: "math-percent-01", locale: "th" });
+  const opened = await openConversation(db, { ownerType: "user", ownerId: userId, lessonId: "math-percent-01", locale: "th" });
   await handleMessage(db, {
     ownerType: "user",
     ownerId: userId,
@@ -75,24 +75,24 @@ test("cancel and chat text do not grant access, and confirm is idempotent", asyn
     locale: "th",
     level: "beginner",
   });
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM entitlements").get()?.n, 0);
-  const paid = openConversation(db, { ownerType: "guest", ownerId: "guest-1", lessonId: "english-cafe-01", locale: "th" });
+  assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM entitlements").get<{ n: number }>())?.n, 0);
+  const paid = await openConversation(db, { ownerType: "guest", ownerId: "guest-1", lessonId: "english-cafe-01", locale: "th" });
   assert.equal(paid.lesson.id, "english-cafe-01");
 
-  const again = createPurchase(db, userId, "english-cafe-01");
+  const again = await createPurchase(db, userId, "english-cafe-01");
   const payer = "11111111111111111111111111111111";
-  db.prepare("UPDATE purchases SET payer = ? WHERE id = ?").run(payer, again.id);
+  await db.prepare("UPDATE purchases SET payer = ? WHERE id = ?").run(payer, again.id);
   const ready = { ...again, payer };
-  const first = fulfillPurchase(db, ready, "5".repeat(88));
-  const second = fulfillPurchase(db, { ...ready, status: "confirmed", signature: "5".repeat(88) }, "5".repeat(88));
+  const first = await fulfillPurchase(db, ready, "5".repeat(88));
+  const second = await fulfillPurchase(db, { ...ready, status: "confirmed", signature: "5".repeat(88) }, "5".repeat(88));
   assert.equal(first.created, true);
   assert.equal(second.created, false);
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM entitlements").get()?.n, 1);
+  assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM entitlements").get<{ n: number }>())?.n, 1);
 });
 
 test("free lesson progress survives a second read and retry does not duplicate", async () => {
   const db = openDatabase(":memory:");
-  const opened = openConversation(db, { ownerType: "guest", ownerId: "guest-9", lessonId: "english-intro-01", locale: "th" });
+  const opened = await openConversation(db, { ownerType: "guest", ownerId: "guest-9", lessonId: "english-intro-01", locale: "th" });
   const first = await handleMessage(db, {
     ownerType: "guest",
     ownerId: "guest-9",
@@ -115,7 +115,7 @@ test("free lesson progress survives a second read and retry does not duplicate",
   });
   assert.equal(retry.idempotent, true);
   assert.equal(retry.messages.filter((message) => message.role === "user").length, 1);
-  const reopened = openConversation(db, { ownerType: "guest", ownerId: "guest-9", lessonId: "english-intro-01", locale: "th" });
+  const reopened = await openConversation(db, { ownerType: "guest", ownerId: "guest-9", lessonId: "english-intro-01", locale: "th" });
   assert.equal(reopened.progress.status, first.progress.status);
   assert.ok(reopened.messages.length >= 2);
 });

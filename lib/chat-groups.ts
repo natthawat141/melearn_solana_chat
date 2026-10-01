@@ -2,6 +2,7 @@ export type ChatHistoryItem = {
   id: string;
   href: string;
   title: string;
+  fullTitle?: string;
   subtitle: string;
   preview: string;
   updatedAt: string;

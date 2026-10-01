@@ -3,7 +3,7 @@
 Wallet login is verified by the Melearn backend. It does not call Dynamic, a blockchain RPC, or a hosted identity provider.
 
 - MetaMask: an EIP-4361 (SIWE) message, signed using `personal_sign`. The backend uses `siwe`/`ethers` to verify normal Ethereum EOA signatures. It uses the connected wallet's chain ID. Contract wallet / ERC-1271 authentication is not supported.
-- Phantom and Solflare: SIWS message format through `@solana/wallet-standard-util`, signed using Wallet Standard `solana:signMessage`. The backend verifies Ed25519 signatures locally.
+- Phantom and Solflare: SIWS message format through `@solana/wallet-standard-util`, signed using Wallet Standard `solana:signMessage`. The backend verifies Ed25519 signatures locally. Identity-only challenges omit the optional SIWS chain ID so login works regardless of the wallet's selected Solana network. Phantom rejects a forced devnet chain ID when the wallet is on mainnet with error `-32000`.
 - Account records, guest progress migration, setup redirects and session cookies use the existing Melearn account system. Existing wallet addresses continue to identify the same account.
 
 ## Configuration

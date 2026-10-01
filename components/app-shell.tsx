@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Home, LogIn, Search, SquarePen, ChevronRight, X } from "lucide-react";
+import { LogIn, Search, SquarePen, ChevronRight, X, GraduationCap } from "lucide-react";
+import { ChatHistoryActions } from "@/components/chat-history-actions";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import type { Account } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -23,17 +24,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { groupChatHistory, type ChatHistoryItem, type HistoryGroup } from "@/lib/chat-groups";
 import { t } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
-
-const items = [
-  { href: "/app", label: "nav.home" as const, icon: Home, match: (path: string) => path === "/app" || path.startsWith("/teachers") },
-];
 
 const groupLabel: Record<HistoryGroup, "history.today" | "history.yesterday" | "history.week" | "history.month" | "history.older"> = {
   today: "history.today",
@@ -45,14 +41,14 @@ const groupLabel: Record<HistoryGroup, "history.today" | "history.yesterday" | "
 
 export function AppShell({ locale, history, isAuthenticated, user, children }: { locale: Locale; history: ChatHistoryItem[]; isAuthenticated: boolean; user: Account | null; children: React.ReactNode }) {
   const pathname = usePathname();
-  const chat = pathname.startsWith("/learn") || pathname.startsWith("/chats");
+  const chat = pathname.startsWith("/learn") || pathname.startsWith("/chats") || pathname.startsWith("/chat");
 
   return (
-    <SidebarProvider style={{ "--sidebar-width-icon": "4rem" } as React.CSSProperties} className={chat ? "h-dvh overflow-hidden" : "min-h-dvh"}>
+    <SidebarProvider style={{ "--sidebar-width": "17rem", "--sidebar-width-icon": "3.5rem" } as React.CSSProperties} className={`melearn-app min-w-0 ${chat ? "h-dvh min-h-0! overflow-hidden" : "min-h-dvh"}`}>
       <Sidebar collapsible="icon" className="melearn-sidebar">
-        <SidebarHeader className="h-[72px] flex-row items-center gap-2 border-b border-sidebar-border px-4 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-1">
-          <Link href="/app" className="shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:hidden" aria-label={locale === "th" ? "หน้าหลัก Melearn Chat" : "Melearn Chat home"}>
-            <Image src="/brand/logo.png" alt="Melearn Chat" width={80} height={54} className="h-[54px] w-20 object-contain" />
+        <SidebarHeader className="h-16 flex-row items-center gap-2 px-4 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-1">
+          <Link href="/chat" className="shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:hidden" aria-label={locale === "th" ? "แชต Melearn Chat" : "Melearn Chat"}>
+            <Image src="/brand/logo.png" alt="Melearn Chat" width={64} height={44} className="h-11 w-16 object-contain" />
           </Link>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -68,56 +64,41 @@ export function AppShell({ locale, history, isAuthenticated, user, children }: {
           <MobileSidebarClose label={t(locale, "history.closeSidebar")} />
         </SidebarHeader>
         <SidebarContent className="overflow-auto">
-          <AppNav locale={locale} />
-          {isAuthenticated ? (
-            <>
-              <SidebarSeparator className="mx-7 my-2 group-data-[collapsible=icon]:hidden" />
-              <SidebarGroup className="min-h-0 flex-1 px-4 pb-4 group-data-[collapsible=icon]:px-2">
-                <ChatHistory locale={locale} items={history} isAuthenticated={isAuthenticated} />
-              </SidebarGroup>
-            </>
-          ) : null}
+          <SidebarGroup className="px-3 pb-0 group-data-[collapsible=icon]:px-2">
+            <TeacherHomeNav locale={locale} />
+          </SidebarGroup>
+          <SidebarGroup className="min-h-0 flex-1 px-3 pb-3 group-data-[collapsible=icon]:px-2">
+            <ChatHistory locale={locale} items={history} isAuthenticated={isAuthenticated} />
+          </SidebarGroup>
         </SidebarContent>
         <AppSidebarFooter locale={locale} isAuthenticated={isAuthenticated} user={user} />
       </Sidebar>
-      <SidebarInset className={chat ? "flex h-dvh min-h-0 flex-col overflow-hidden bg-background" : "bg-background"}>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 md:hidden">
+      <SidebarInset className={chat ? "flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-background" : "min-w-0 bg-background"}>
+        <header className={`${pathname.startsWith("/chat") ? "hidden" : "flex"} h-14 shrink-0 items-center gap-2 px-3 md:hidden`}>
           <SidebarTrigger className="size-11 md:hidden" />
         </header>
-        <div className={chat ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex-1 pb-8"}>{children}</div>
+        <div className={chat ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" : "min-w-0 flex-1 pb-8"}>{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
 }
 
-function AppNav({ locale }: { locale: Locale }) {
+function TeacherHomeNav({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
+  const label = locale === "th" ? "เลือกผู้สอน" : "Choose a teacher";
+  const active = pathname === "/app" || pathname.startsWith("/teachers/");
   return (
-    <SidebarGroup className="shrink-0 px-4 pb-2 pt-5 group-data-[collapsible=icon]:px-2">
-      <SidebarGroupLabel className="mb-3 h-7 justify-between px-3 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-        <span className="font-semibold">{locale === "th" ? "เมนูหลัก" : "Main menu"}</span>
-        <span>{locale === "th" ? "ผู้เรียน" : "Learner"}</span>
-      </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu className="gap-1">
-          {items.map((item) => {
-            const active = item.match(pathname);
-            const Icon = item.icon;
-            return (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton asChild isActive={active} size="lg" tooltip={t(locale, item.label)} className="h-11 gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors data-active:font-semibold data-active:text-sidebar-accent-foreground group-data-[collapsible=icon]:mx-auto">
-                  <Link href={item.href} aria-current={active ? "page" : undefined} onClick={() => setOpenMobile(false)}>
-                    <Icon />
-                    <span className="group-data-[collapsible=icon]:hidden">{t(locale, item.label)}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={active} tooltip={label} className="h-10 gap-3 rounded-lg px-3 text-sm! font-normal data-active:font-medium group-data-[collapsible=icon]:mx-auto">
+          <Link href="/app" aria-current={pathname === "/app" ? "page" : undefined} onClick={() => setOpenMobile(false)}>
+            <GraduationCap />
+            <span className="group-data-[collapsible=icon]:hidden">{label}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
   );
 }
 
@@ -135,13 +116,13 @@ function ChatHistory({ locale, items, isAuthenticated }: { locale: Locale; items
   }, [items, query]);
 
   return (
-    <SidebarGroupContent className="flex h-full min-h-0 flex-col gap-3">
+    <SidebarGroupContent className="flex h-full min-h-0 flex-col gap-2">
       {isAuthenticated ? (
         <>
           <SidebarMenu className="gap-1">
             <SidebarMenuItem>
-              <SidebarMenuButton asChild size="lg" tooltip={t(locale, "history.new")} className="h-10 gap-3 rounded-xl bg-primary/15 px-3 text-primary hover:bg-primary/20 hover:text-primary group-data-[collapsible=icon]:mx-auto">
-                <Link href="/app" onClick={() => setOpenMobile(false)}>
+              <SidebarMenuButton asChild size="lg" tooltip={t(locale, "history.new")} className="h-10 gap-3 rounded-lg px-3 text-sm! text-sidebar-foreground hover:bg-sidebar-accent group-data-[collapsible=icon]:mx-auto">
+                <Link href="/chat/new" onClick={() => setOpenMobile(false)}>
                   <SquarePen />
                   <span className="group-data-[collapsible=icon]:hidden">{t(locale, "history.new")}</span>
                 </Link>
@@ -160,7 +141,7 @@ function ChatHistory({ locale, items, isAuthenticated }: { locale: Locale; items
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t(locale, "history.search")}
               aria-label={t(locale, "history.search")}
-              className="h-10 rounded-xl pl-9 shadow-none focus-visible:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="h-9 rounded-lg border-0 text-sm! bg-sidebar-accent/40 pl-9 shadow-none focus-visible:ring-2 focus-visible:ring-sidebar-ring/40"
             />
           </div>
           <div className="min-h-0 flex-1 overflow-auto group-data-[collapsible=icon]:hidden">
@@ -171,25 +152,23 @@ function ChatHistory({ locale, items, isAuthenticated }: { locale: Locale; items
             ) : (
               groups.map((section) => (
                 <div key={section.group}>
-                  <SidebarGroupLabel>{t(locale, groupLabel[section.group])}</SidebarGroupLabel>
+                  <SidebarGroupLabel className="mt-4 h-7 px-3 text-xs font-normal">{t(locale, groupLabel[section.group])}</SidebarGroupLabel>
                   <SidebarMenu>
                     {section.items.map((item) => {
                       const current = pathname === item.href;
                       return (
-                        <SidebarMenuItem key={item.id}>
+                        <SidebarMenuItem key={item.id} className="group/history-row">
                           <SidebarMenuButton
                             asChild
                             isActive={current}
                             tooltip={item.preview || item.subtitle}
-                            className={`h-auto min-h-11 rounded-xl px-3 py-2 ${current ? "ring-1 ring-inset ring-primary/25 font-semibold" : ""}`}
+                            className="h-10 rounded-lg py-2 pl-3 pr-10 text-sm! font-normal data-active:font-medium"
                           >
                             <Link href={item.href} aria-current={current ? "page" : undefined} onClick={() => setOpenMobile(false)}>
-                              <span className="flex min-w-0 flex-col gap-0.5">
-                                <span className="truncate">{item.title}</span>
-                                <span className="line-clamp-1 text-xs font-normal text-muted-foreground">{item.preview || item.subtitle}</span>
-                              </span>
+                              <span className="min-w-0 truncate">{item.title}</span>
                             </Link>
                           </SidebarMenuButton>
+                          <ChatHistoryActions item={item} locale={locale} current={current} />
                         </SidebarMenuItem>
                       );
                     })}
@@ -221,7 +200,7 @@ function AppSidebarFooter({ locale, isAuthenticated, user }: { locale: Locale; i
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   return (
-    <SidebarFooter className="gap-3 px-[18px] pb-4 pt-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
+    <SidebarFooter className="gap-2 px-3 pb-3 pt-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-2">
       {!isAuthenticated ? (
         <>
           <p className="px-2 text-xs leading-relaxed text-muted-foreground group-data-[collapsible=icon]:hidden">{t(locale, "history.guestTitle")}</p>
@@ -233,20 +212,13 @@ function AppSidebarFooter({ locale, isAuthenticated, user }: { locale: Locale; i
           </Button>
         </>
       ) : null}
-      <Button asChild variant="secondary" className="h-[38px] w-full gap-2 rounded-xl bg-muted text-xs text-muted-foreground hover:bg-muted/80 group-data-[collapsible=icon]:hidden">
-        <Link href="/" onClick={() => setOpenMobile(false)}>
-          <ArrowLeft data-icon="inline-start" />
-          {locale === "th" ? "กลับไปหน้าหลัก" : "Back to homepage"}
-        </Link>
-      </Button>
-      <SidebarSeparator className="mx-0 group-data-[collapsible=icon]:hidden" />
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild isActive={pathname.startsWith("/profile")} tooltip={t(locale, "nav.profile")} className="h-auto min-h-16 gap-3 rounded-xl px-3 py-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10!">
+          <SidebarMenuButton asChild isActive={pathname.startsWith("/profile")} tooltip={t(locale, "nav.profile")} className="h-12 gap-2 rounded-lg px-2 py-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10!">
             <Link href="/profile" aria-current={pathname.startsWith("/profile") ? "page" : undefined} onClick={() => setOpenMobile(false)}>
-              <ProfileAvatar name={user?.displayName ?? ""} src={user?.avatarUrl} />
-              <span className="flex min-w-0 flex-1 flex-col gap-1 group-data-[collapsible=icon]:hidden">
-                <span className="truncate font-semibold">{user?.displayName || t(locale, "nav.profile")}</span>
+              <ProfileAvatar name={user?.displayName ?? ""} src={user?.avatarUrl} className="size-8" />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-sm font-medium">{user?.displayName || t(locale, "nav.profile")}</span>
                 <span className="text-xs font-normal text-muted-foreground">{user ? t(locale, "profile.sidebarLabel") : t(locale, "auth.login")}</span>
               </span>
               <ChevronRight aria-hidden="true" className="text-muted-foreground group-data-[collapsible=icon]:hidden" />

@@ -79,6 +79,14 @@ class SqliteDatabase implements AppDatabase {
     return new SqliteStatement(this.database.prepare(sql));
   }
 
+  exec(sql: string) {
+    this.database.exec(sql);
+  }
+
+  close() {
+    this.database.close();
+  }
+
   async transaction<T>(run: () => Promise<T>) {
     const savepoint = `melearn_tx_${++transactionSequence}`;
     this.database.exec(`SAVEPOINT ${savepoint}`);
@@ -101,7 +109,7 @@ class SqliteDatabase implements AppDatabase {
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, display_name TEXT NOT NULL COLLATE NOCASE UNIQUE, password_hash TEXT NOT NULL, locale TEXT NOT NULL DEFAULT 'en', level TEXT, goal TEXT, onboarded INTEGER NOT NULL DEFAULT 0, wallet_address TEXT, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS guests (id TEXT PRIMARY KEY, locale TEXT NOT NULL DEFAULT 'en', level TEXT, goal TEXT, onboarded INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, owner_type TEXT NOT NULL, owner_id TEXT NOT NULL, teacher_id TEXT NOT NULL, lesson_id TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, owner_type TEXT NOT NULL, owner_id TEXT NOT NULL, teacher_id TEXT NOT NULL, lesson_id TEXT NOT NULL, title TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL, role TEXT NOT NULL, text TEXT NOT NULL, client_message_id TEXT, mode TEXT, created_at TEXT NOT NULL);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_msg_client ON messages(conversation_id, client_message_id, role);
 CREATE TABLE IF NOT EXISTS progress (owner_type TEXT NOT NULL, owner_id TEXT NOT NULL, lesson_id TEXT NOT NULL, lesson_version INTEGER NOT NULL, status TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, hints_used INTEGER NOT NULL DEFAULT 0, phase TEXT NOT NULL DEFAULT 'chat', practice_index INTEGER NOT NULL DEFAULT 0, results_json TEXT NOT NULL DEFAULT '[]', updated_at TEXT NOT NULL, PRIMARY KEY (owner_type, owner_id, lesson_id));
@@ -148,6 +156,8 @@ function ensureProfileSchema(db: DatabaseSync) {
   const emailCodeColumns = db.prepare("PRAGMA table_info(email_codes)").all() as Array<{ name: string }>;
   if (!emailCodeColumns.some(existing => existing.name === "attempts")) db.exec("ALTER TABLE email_codes ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0");
   db.exec("CREATE INDEX IF NOT EXISTS idx_email_codes ON email_codes(email, type, code)");
+  const conversationColumns = db.prepare("PRAGMA table_info(conversations)").all() as Array<{ name: string }>;
+  if (!conversationColumns.some(column => column.name === "title")) db.exec("ALTER TABLE conversations ADD COLUMN title TEXT");
   profileSchemaReady.add(db);
 }
 
@@ -162,6 +172,8 @@ export function openDatabase(filename: string) {
   return new SqliteDatabase(database);
 }
 
+const conversationSchemaChecks = new WeakMap<AppDatabase, Promise<void>>();
+
 export async function getDb() {
   const remote = await cloudflareDatabase();
   if (remote) return remote;
@@ -169,7 +181,17 @@ export async function getDb() {
     const filename = process.env.DATABASE_PATH || path.join(process.cwd(), "data", "melearn.db");
     globalState.melearnDb = openDatabase(filename);
   }
-  return globalState.melearnDb;
+  const db = globalState.melearnDb;
+  let schemaCheck = conversationSchemaChecks.get(db);
+  if (!schemaCheck) {
+    schemaCheck = (async () => {
+      const columns = await db.prepare("PRAGMA table_info(conversations)").all<{ name: string }>();
+      if (!columns.some(column => column.name === "title")) await db.prepare("ALTER TABLE conversations ADD COLUMN title TEXT").run();
+    })();
+    conversationSchemaChecks.set(db, schemaCheck);
+  }
+  await schemaCheck;
+  return db;
 }
 
 export function withTransaction<T>(db: AppDatabase, run: () => Promise<T>) {

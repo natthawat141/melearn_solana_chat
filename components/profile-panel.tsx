@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import bs58 from "bs58";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Copy, LogOut, Wallet, Trash2 } from "lucide-react";
+import { Camera, Copy, LogOut, Wallet, Trash2, SlidersHorizontal, GraduationCap, ChartNoAxesColumn } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { EducationPreferences } from "@/components/education-preferences";
 import { LearningPreferences } from "@/components/learning-preferences";
@@ -148,48 +148,37 @@ export function ProfilePanel({
   if (!signedIn) {
     return (
       <div className="mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-[960px] flex-col gap-4 px-5 py-6 md:px-8 md:py-8">
-        <h1>{t(locale, "profile.title")}</h1>
+        <h1>{t(locale, "profile.settingsTitle")}</h1>
         <SignedOutState locale={locale} title={t(locale, "profile.signInTitle")} body={t(locale, "profile.guest")} nextPath="/profile" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1040px] space-y-6 px-5 py-7 md:px-8 md:py-10">
+    <div className="mx-auto w-full max-w-[1040px] space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 md:px-8 md:py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">{t(locale, "profile.title")}</h1>
+          <h1 className="text-2xl! font-semibold! tracking-tight">{t(locale, "profile.settingsTitle")}</h1>
           <p className="text-sm text-muted-foreground">{t(locale, "profile.manage")}</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-10 gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-          disabled={pending}
-          onClick={() => void perform(logout)}
-        >
-          {pending ? <Spinner /> : <LogOut className="size-4" />}
-          <span>{t(locale, "auth.logout")}</span>
-        </Button>
       </header>
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:hidden">
         {error ? <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
         {message ? <Alert><AlertDescription>{message}</AlertDescription></Alert> : null}
       </div>
-      <Tabs defaultValue="account" className="gap-5">
-        <TabsList aria-label={t(locale, "profile.sections")} className="grid h-auto group-data-horizontal/tabs:h-auto w-full grid-cols-2 gap-1 bg-muted/60 p-1 sm:grid-cols-4">
-          <TabsTrigger value="account" className="min-h-11">{t(locale, "profile.account")}</TabsTrigger>
-          <TabsTrigger value="learning" className="min-h-11">{t(locale, "profile.preferences")}</TabsTrigger>
-          <TabsTrigger value="progress" className="min-h-11">{t(locale, "profile.progress")}</TabsTrigger>
-          <TabsTrigger value="settings" className="min-h-11">{t(locale, "profile.session")}</TabsTrigger>
+      <Tabs defaultValue="general" onValueChange={() => { setError(null); setMessage(null); }} className="min-w-0 gap-6 sm:gap-8 xl:grid xl:grid-cols-[180px_minmax(0,1fr)] xl:gap-12">
+        <TabsList aria-label={t(locale, "profile.sections")} className="grid h-auto group-data-horizontal/tabs:h-auto w-full grid-cols-1 gap-2 self-start bg-transparent p-0 sm:grid-cols-3 xl:flex xl:flex-col xl:items-stretch">
+          <TabsTrigger value="general" className="h-auto min-h-11 min-w-0 w-full justify-start gap-2 rounded-lg px-3 py-2 text-left text-sm! whitespace-normal xl:gap-3 xl:px-4"><SlidersHorizontal />{t(locale, "profile.general")}</TabsTrigger>
+          <TabsTrigger value="learning" className="h-auto min-h-11 min-w-0 w-full justify-start gap-2 rounded-lg px-3 py-2 text-left text-sm! whitespace-normal xl:gap-3 xl:px-4"><GraduationCap />{t(locale, "profile.preferences")}</TabsTrigger>
+          <TabsTrigger value="progress" className="h-auto min-h-11 min-w-0 w-full justify-start gap-2 rounded-lg px-3 py-2 text-left text-sm! whitespace-normal xl:gap-3 xl:px-4"><ChartNoAxesColumn />{t(locale, "profile.progress")}</TabsTrigger>
         </TabsList>
-        <TabsContent value="account">
+        <TabsContent value="general" className="min-w-0 space-y-10">
           <form onSubmit={event => { event.preventDefault(); void perform(() => save("account")); }}>
-          <Card>
-            <CardHeader><CardTitle>{t(locale, "profile.account")}</CardTitle></CardHeader>
-            <CardContent className="space-y-6">
+          <Card className="gap-6 rounded-none bg-transparent p-0 shadow-none ring-0">
+            <CardHeader className="px-0"><CardTitle>{t(locale, "profile.account")}</CardTitle></CardHeader>
+            <CardContent className="px-0 space-y-6">
               <div className="flex items-center gap-4">
-                <ProfileAvatar name={name} src={photo} className="size-20 shrink-0 [&_[data-slot=avatar-fallback]]:text-3xl" />
+                <ProfileAvatar name={name} src={photo} className="size-16 shrink-0 sm:size-20 [&_[data-slot=avatar-fallback]]:text-2xl sm:[&_[data-slot=avatar-fallback]]:text-3xl" />
                 <div className="min-w-0 space-y-2">
                   <p className="truncate font-semibold">{displayName}</p>
                   <input ref={imageInput} type="file" hidden aria-label={t(locale, "profile.photo")} accept="image/jpeg,image/png,image/webp" disabled={pending} onChange={event => { const file = event.target.files?.[0]; if (file) void perform(() => uploadImage(file)); event.target.value = ""; }} />
@@ -200,7 +189,7 @@ export function ProfilePanel({
               <FieldGroup>
                 <Field><FieldLabel htmlFor="profile-name">{t(locale, "profile.name")}</FieldLabel><Input id="profile-name" className="h-11" value={name} onChange={event => setName(event.target.value)} maxLength={40} required disabled={pending} autoComplete="nickname" /></Field>
               </FieldGroup>
-              <div className="rounded-xl border bg-muted/30 p-4">
+              <div className="border-y border-border py-4">
                 <div className="flex items-center gap-2 text-sm font-semibold"><Wallet className="size-4" />{t(locale, "profile.wallet")}</div>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <p className="min-w-0 truncate text-sm text-muted-foreground">{wallet ? shortAddress(wallet) : t(locale, "profile.walletNone")}</p>
@@ -209,17 +198,7 @@ export function ProfilePanel({
                 {!wallet ? <Button type="button" variant="outline" className="mt-3" disabled={pending} onClick={() => void perform(linkWallet)}>{t(locale, "profile.walletLink")}</Button> : null}
               </div>
             </CardContent>
-            <CardFooter className="flex flex-wrap items-center justify-between gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="min-h-11 gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                disabled={pending}
-                onClick={() => void perform(logout)}
-              >
-                <LogOut className="size-4" />
-                <span>{t(locale, "auth.logout")}</span>
-              </Button>
+            <CardFooter className="rounded-none border-0 bg-transparent px-0 pb-0 pt-4 justify-end">
               <Button type="submit" className="min-h-11" disabled={pending}>
                 {pending ? <Spinner /> : null}
                 {t(locale, "profile.save")}
@@ -227,51 +206,58 @@ export function ProfilePanel({
             </CardFooter>
           </Card>
           </form>
+
+            <Card className="gap-6 rounded-none bg-transparent p-0 shadow-none ring-0">
+              <CardHeader className="px-0"><CardTitle>{t(locale, "profile.appearance")}</CardTitle><CardDescription>{t(locale, "profile.appearanceHint")}</CardDescription></CardHeader>
+              <CardContent className="px-0 divide-y divide-border">
+                <div className="flex flex-wrap items-center justify-between gap-5 py-6 first:pt-0">
+                  <div><p className="font-medium">{t(locale, "profile.language")}</p><p className="text-sm text-muted-foreground">{t(locale, "profile.languageHint")}</p></div>
+                  <LanguageSwitcher locale={locale} labelled />
+                </div>
+                <div className="flex flex-col gap-5 pt-6">
+                  <div><p className="font-medium">{t(locale, "profile.theme")}</p><p className="text-sm text-muted-foreground">{t(locale, "profile.themeHint")}</p></div>
+                  <ThemeToggle label={t(locale, "profile.theme")} lightLabel={locale === "th" ? "สว่าง" : "Light"} darkLabel={locale === "th" ? "มืด" : "Dark"} />
+                </div>
+              </CardContent>
+            </Card>
+
+
+
+            <Card className="gap-6 rounded-none bg-transparent p-0 shadow-none ring-0">
+              <CardHeader className="px-0"><CardTitle>{t(locale, "profile.session")}</CardTitle><CardDescription>{t(locale, "profile.sessionHint")}</CardDescription></CardHeader>
+              <CardContent className="divide-y divide-border px-0">
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-5">
+                  <p className="font-medium">{t(locale, "auth.logout")}</p>
+                  <Button type="button" variant="outline" disabled={pending} onClick={() => void perform(logout)}><LogOut />{t(locale, "auth.logout")}</Button>
+                </div>
+                <div className="flex flex-col items-start justify-between gap-4 pt-5 sm:flex-row">
+                  <div className="min-w-0 flex-1 space-y-1"><p className="font-medium">{t(locale, "profile.delete")}</p><p className="max-w-md text-sm text-muted-foreground">{t(locale, "profile.deleteBody")}</p></div>
+                  <Button type="button" variant="destructive" disabled={pending} onClick={() => setConfirm(true)}><Trash2 />{t(locale, "profile.delete")}</Button>
+                </div>
+              </CardContent>
+            </Card>
+
         </TabsContent>
         <TabsContent value="learning">
           <form onSubmit={event => { event.preventDefault(); void perform(() => save("learning")); }}>
-          <Card>
-            <CardHeader><CardTitle>{t(locale, "profile.preferences")}</CardTitle><CardDescription>{t(locale, "profile.preferencesHint")}</CardDescription></CardHeader>
-            <CardContent className="space-y-8"><EducationPreferences locale={locale} educationStage={nextEducationStage} preferredSubject={nextPreferredSubject} onEducationStage={setNextEducationStage} onPreferredSubject={setNextPreferredSubject} disabled={pending} /><LearningPreferences locale={locale} level={nextLevel} goal={nextGoal} onLevel={setNextLevel} onGoal={setNextGoal} disabled={pending} /></CardContent>
-            <CardFooter className="justify-end"><Button type="submit" className="min-h-11" disabled={pending}>{pending ? <Spinner /> : null}{t(locale, "profile.save")}</Button></CardFooter>
+          <Card className="gap-6 rounded-none bg-transparent p-0 shadow-none ring-0">
+            <CardHeader className="px-0"><CardTitle>{t(locale, "profile.preferences")}</CardTitle><CardDescription>{t(locale, "profile.preferencesHint")}</CardDescription></CardHeader>
+            <CardContent className="px-0 space-y-8"><EducationPreferences locale={locale} educationStage={nextEducationStage} preferredSubject={nextPreferredSubject} onEducationStage={setNextEducationStage} onPreferredSubject={setNextPreferredSubject} disabled={pending} /><LearningPreferences locale={locale} level={nextLevel} goal={nextGoal} onLevel={setNextLevel} onGoal={setNextGoal} disabled={pending} /></CardContent>
+            <CardFooter className="rounded-none border-0 bg-transparent px-0 pb-0 pt-4 justify-end"><Button type="submit" className="min-h-11" disabled={pending}>{pending ? <Spinner /> : null}{t(locale, "profile.save")}</Button></CardFooter>
           </Card>
           </form>
         </TabsContent>
         <TabsContent value="progress">
-          <Card>
-            <CardHeader><CardTitle>{t(locale, "profile.progress")}</CardTitle><CardDescription>{t(locale, "profile.progressHint")}</CardDescription></CardHeader>
-            <CardContent className="space-y-5">
+          <Card className="gap-6 rounded-none bg-transparent p-0 shadow-none ring-0">
+            <CardHeader className="px-0"><CardTitle>{t(locale, "profile.progress")}</CardTitle><CardDescription>{t(locale, "profile.progressHint")}</CardDescription></CardHeader>
+            <CardContent className="px-0 space-y-5">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border p-4"><p className="text-2xl font-semibold tabular-nums">{learning.filter(item => item.status !== "completed").length}</p><p className="mt-1 text-muted-foreground">{t(locale, "lesson.inProgress")}</p></div>
-                <div className="rounded-xl border p-4"><p className="text-2xl font-semibold tabular-nums">{learning.filter(item => item.status === "completed").length}</p><p className="mt-1 text-muted-foreground">{t(locale, "lesson.completed")}</p></div>
+                <div className="rounded-lg bg-muted/50 p-4"><p className="text-2xl font-semibold tabular-nums">{learning.filter(item => item.status !== "completed").length}</p><p className="mt-1 text-muted-foreground">{t(locale, "lesson.inProgress")}</p></div>
+                <div className="rounded-lg bg-muted/50 p-4"><p className="text-2xl font-semibold tabular-nums">{learning.filter(item => item.status === "completed").length}</p><p className="mt-1 text-muted-foreground">{t(locale, "lesson.completed")}</p></div>
               </div>
-              {learning.length ? <ul className="divide-y rounded-xl border px-4">{learning.map(item => <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div className="min-w-0 space-y-1"><p className="font-medium">{item.title}</p><p className="text-xs text-muted-foreground">{formatWhen(item.updatedAt, locale)}</p><Badge variant="secondary">{t(locale, item.status === "completed" ? "lesson.completed" : "lesson.inProgress")}</Badge></div><Button asChild variant="outline"><Link href={`/learn/${item.id}`}>{t(locale, item.status === "completed" ? "teacher.review" : "home.continue")}</Link></Button></li>)}</ul> : <div className="space-y-3 rounded-xl border border-dashed p-6 text-center"><p className="text-muted-foreground">{t(locale, "progress.empty")}</p><Button asChild><Link href="/app">{t(locale, "progress.pickTeacher")}</Link></Button></div>}
+              {learning.length ? <ul className="divide-y divide-border">{learning.map(item => <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div className="min-w-0 space-y-1"><p className="font-medium">{item.title}</p><p className="text-xs text-muted-foreground">{formatWhen(item.updatedAt, locale)}</p><Badge variant="secondary">{t(locale, item.status === "completed" ? "lesson.completed" : "lesson.inProgress")}</Badge></div><Button asChild variant="outline"><Link href={`/learn/${item.id}`}>{t(locale, item.status === "completed" ? "teacher.review" : "home.continue")}</Link></Button></li>)}</ul> : <div className="space-y-3 rounded-lg bg-muted/40 p-6 text-center"><p className="text-muted-foreground">{t(locale, "progress.empty")}</p><Button asChild><Link href="/app">{t(locale, "progress.pickTeacher")}</Link></Button></div>}
             </CardContent>
           </Card>
-        </TabsContent>
-        <TabsContent value="settings">
-          <div className="space-y-5">
-            <Card>
-              <CardHeader><CardTitle>{t(locale, "profile.appearance")}</CardTitle><CardDescription>{t(locale, "profile.appearanceHint")}</CardDescription></CardHeader>
-              <CardContent className="grid gap-6 sm:grid-cols-2">
-                <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
-                  <div><p className="font-medium">{t(locale, "profile.language")}</p><p className="text-sm text-muted-foreground">{t(locale, "profile.languageHint")}</p></div>
-                  <LanguageSwitcher locale={locale} />
-                </div>
-                <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
-                  <div><p className="font-medium">{t(locale, "profile.theme")}</p><p className="text-sm text-muted-foreground">{t(locale, "profile.themeHint")}</p></div>
-                  <ThemeToggle label={t(locale, "profile.theme")} lightLabel={t(locale, "profile.themeLight")} darkLabel={t(locale, "profile.themeDark")} />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle>{t(locale, "profile.session")}</CardTitle><CardDescription>{t(locale, "profile.sessionHint")}</CardDescription></CardHeader>
-              <CardFooter className="flex flex-wrap justify-between gap-3">
-                <Button type="button" variant="outline" disabled={pending} onClick={() => void perform(logout)}><LogOut />{t(locale, "auth.logout")}</Button>
-                <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" disabled={pending} onClick={() => setConfirm(true)}><Trash2 />{t(locale, "profile.delete")}</Button>
-              </CardFooter>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
       <ConfirmDialog open={confirm} title={t(locale, "profile.deleteConfirm")} body={t(locale, "profile.deleteBody")} confirmLabel={t(locale, "common.confirm")} cancelLabel={t(locale, "common.cancel")} onOpenChange={setConfirm} onConfirm={() => perform(removeHistory)} />

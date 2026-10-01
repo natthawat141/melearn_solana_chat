@@ -176,7 +176,7 @@ export function ChatRoom({
 
       <div
         ref={scroller}
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
         onScroll={(event) => {
           const node = event.currentTarget;
           const near = node.scrollHeight - node.scrollTop - node.clientHeight < 80;
@@ -196,7 +196,7 @@ export function ChatRoom({
               </article>
             ) : (
               <article key={message.id} className="flex justify-end">
-                <p className="max-w-[min(100%,32rem)] whitespace-pre-wrap rounded-[18px] bg-secondary px-4 py-2.5 text-[15px] leading-6 text-secondary-foreground">
+                <p className="min-w-0 max-w-[min(100%,32rem)] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[18px] bg-secondary px-4 py-2.5 text-[15px] leading-6 text-secondary-foreground">
                   <span className="sr-only">{t(locale, "chat.you")}: </span>
                   {userText(message.text)}
                 </p>

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Languages } from "lucide-react";
+import { Languages, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
@@ -13,7 +13,7 @@ const languages = [
   { value: "en", label: "English" },
 ] as const;
 
-export function LanguageSwitcher({ locale }: { locale: Locale }) {
+export function LanguageSwitcher({ locale, labelled = false }: { locale: Locale; labelled?: boolean }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [refreshing, startTransition] = useTransition();
@@ -44,8 +44,9 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
     <div className="settings-control">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" className="settings-button" disabled={pending} aria-label={label} aria-busy={pending}>
+          <Button variant="outline" size={labelled ? "default" : "icon"} className={labelled ? "h-11 min-w-40 justify-between gap-3 rounded-lg px-3 text-sm!" : "settings-button"} disabled={pending} aria-label={label} aria-busy={pending}>
             {pending ? <Spinner /> : <Languages strokeWidth={1.5} />}
+            {labelled ? <><span className="flex-1 text-left">{locale === "th" ? "ไทย" : "English"}</span><ChevronDown className="size-4" /></> : null}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-40">
@@ -58,7 +59,7 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      {error ? <p className="settings-error" role="alert">{error}</p> : null}
+      {error ? <p className={labelled ? "mt-2 max-w-xs text-sm text-destructive" : "settings-error"} role="alert">{error}</p> : null}
     </div>
   );
 }

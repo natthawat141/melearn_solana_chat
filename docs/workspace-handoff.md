@@ -1,36 +1,8 @@
-# Handoff: one project checkout
+# Local development
 
 Read this with `AGENTS.md` before editing files or opening a preview.
 
-## Canonical folder
-
-```text
-/Volumes/Extreme SSD/bill_dev/melearn_solana_chat
-```
-
-The nested path `melearn_solana_chat/melearn_solana_chat` is a symlink back to the root so tools that remember the old path still open this checkout. It is not a second project. Do not replace it with a directory, clone, or new copy, and do not walk the symlink recursively.
-
-Before starting work, check:
-
-```bash
-pwd -P
-git rev-parse --show-toplevel
-git status --short
-```
-
-The first two commands must both name the physical folder above. Keep uncommitted work. If the SSD is not mounted, stop editing the repository. Do not create a replacement directory under `/Volumes`.
-
-## What was fixed on 27 September 2026
-
-Two Git repositories were nested. The outer one had the new landing page; the inner one still had the old pages. The preview on port 43123 was running from the inner copy, and the Cursor workspace pointed there, so the old UI showed even though the new code was in the outer checkout. There is no evidence that identifies which AI created the copy or switched the server.
-
-The whole inner directory, including Git, uncommitted work, environment files, and the previous data, was moved to:
-
-```text
-/Volumes/Extreme SSD/bill_dev_archives/melearn_solana_chat-duplicate-20260927-160150
-```
-
-Use that only to recover something. Do not open it as the working project or run a server from there. Do not copy its database or environment files over the active project automatically.
+The nested path `melearn_solana_chat/melearn_solana_chat` is a symlink back to the repository root. It is not a second project. Do not replace it with a directory, clone, or new copy.
 
 ## How to run and check the preview
 

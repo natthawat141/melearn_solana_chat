@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Melearn Chat",
     short_name: "Melearn",
     description: "ฝึกภาษาอังกฤษและคณิตศาสตร์กับครู AI",
-    start_url: "/app",
+    start_url: "/chat",
     scope: "/",
     display: "standalone",
     background_color: "#f4f8ff",

@@ -1,8 +1,8 @@
-# Interior UX plan for Melearn, for the next developer
+# Interior UX plan
 
 Date: 27 September 2026
 
-Status: planning document. The user asked to stop writing code and hand the plan to another AI to build. This file is not an instruction to start implementing inside the chat that wrote the plan.
+This file records the UI plan used while the classroom was being built. The running application is the source of truth.
 
 ## 1. Goal and scope
 
@@ -21,9 +21,7 @@ Required outcomes:
 
 Out of scope: redesigning the landing page, changing the AI tutor or grading, adding real payments, a production deploy, several learners inside one account, or rebuilding the database without a need.
 
-## 2. Code state the next person must know before starting
-
-Some files were edited before the user said stop. Read the diff first. Treat that work as unfinished. It has not passed a full flow review. Do not report that this plan is implemented just because the files exist.
+## 2. Areas covered by the plan
 
 | Area | State at handoff | What the next person must do |
 | --- | --- | --- |
@@ -265,16 +263,18 @@ Use a fixture or a test account in separate data. Do not change a real user's ac
 
 If a browser check is unavailable, say so. Do not claim a visual or interaction check passed because the server returned HTML 200.
 
-## 9. What to report when handing work back
+## 1 October 2026: approved card and preference follow-up
 
-1. Which flows and pages changed, and why
-2. Which components were reused, and which were added from the registry
-3. Earlier unfinished work that was kept or fixed, kept distinct from the new work
-4. A short check result, and the limits that remain
-5. A URL or image of a result that was actually checked
+The user authorized redesigning first-entry cards and Learning preferences.
+The teacher picker now uses one equal-height card grid for available and coming
+soon teachers, with a fixed image height and aligned actions. Availability and
+teacher/lesson routes remain unchanged. The setup wizard is a single inline
+shadcn Card instead of a duplicate card behind a locked Dialog. It retains quick
+and detailed modes, account persistence and the chosen destination, and offers
+Skip for each question as the existing copy promises.
 
-Do not report that the interior design is finished if only auth and setup were done. Do not open a PR, commit, or deploy on the assumption that this plan approves those actions.
-
-## 10. Note to pass to the implementing AI
-
-"Read AGENTS.md, docs/workspace-handoff.md, and docs/interior-ui-plan.md before starting. Use the single canonical repository. Keep the landing page the user already accepted. Read the unfinished diff before editing. Start with tasks 0–4 so the guest, auth, setup, and return-to-lesson flow is complete. Use the shadcn/ui components that are already installed. If one is missing, load it through the CLI before writing your own. Then adjust the dashboard, chat, history, and profile according to the plan. Report only what you did and what you actually checked. Do not deploy, and do not discard earlier work on your own."
+Shared PreferenceChoices composes the installed shadcn ToggleGroup/Item. Setup,
+education preferences and learning preferences use the same equal-sized option
+cards, selected check marks and blue accents. Existing Field/FieldSet and Card
+components were read and reused; no parallel selection control was created.
+Verification is TypeScript and targeted lint; the user handles UI testing.

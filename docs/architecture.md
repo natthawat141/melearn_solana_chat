@@ -1,10 +1,10 @@
 # Melearn architecture
 
-This is the system that runs today on one Next.js process. The Cloudflare target in [cloudflare-migration.md](cloudflare-migration.md) is prepared and not deployed. Open [melearn-architecture.html](melearn-architecture.html) in a browser for the same picture as a diagram.
+The reviewer map, including the Web3 boundary, is [web3.md](web3.md). This file is the shorter view of the same app. Production runs on the Cloudflare Worker `melearn-chat` at `chat.melearn.io` with D1. Local development is one Next.js process on port 43123 with SQLite.
 
 ## Shape
 
-A learner uses one Next.js 15 app on port 43123. Public pages and the classroom are React route groups. Route handlers in `app/api` are the only write path. The live database is SQLite at `data/melearn.db` through `node:sqlite`.
+A learner uses one Next.js 15 app. Public pages and the classroom are React route groups. Route handlers in `app/api` are the only write path. Locally the database is SQLite at `data/melearn.db`. Production uses the same schema on Cloudflare D1.
 
 ```mermaid
 flowchart LR
@@ -28,7 +28,7 @@ flowchart LR
   api --> db
   model --> openrouter
   model --> tavily
-  api -.->|payment code present, demo does not charge| solana
+  api -.->|devnet transfer check, demo does not charge| solana
 ```
 
 ## Pages
@@ -54,8 +54,6 @@ Two reply paths:
 - When `TAVILY_API_KEY` is set, a current-facts question can add web results. Those results are untrusted context. Links are attached to the answer. Without the key, there is no web search.
 - When `SUPADATA_API_KEY` is set and the message contains a YouTube link, existing captions are loaded with `mode=native` and given to the model as untrusted context. A missing caption does not let the model invent the video. Hints and grading do not call Supadata.
 
-Rate limits for wallet login are in process memory. They are not shared across instances.
-
 ## Data
 
 SQLite tables: `users`, `guests`, `conversations`, `messages`, `progress`, `quotas`, `purchases`, `entitlements`, `wallet_challenges`. Profile columns added in place: `avatar_url`, `education_stage`, `preferred_subject`.
@@ -67,5 +65,5 @@ The Cloudflare D1 migrations and `scripts/export-cloudflare-data.mjs` are an exp
 ## What is intentionally not live
 
 - Pro on the landing page is sample copy. The top-up control does not charge.
-- Purchase routes and `@solana/kit` checks exist for a future devnet test payment. A chat message cannot unlock a lesson.
-- Workers, D1, R2, and Workers AI are the agreed migration target. No Cloudflare resources have been created for this app.
+- Purchase routes and `@solana/kit` checks implement a devnet SOL transfer with a purchase memo. The demo leaves every lesson open, so that path is not the public checkout. A chat message cannot unlock a lesson. Details are in [web3.md](web3.md).
+- Open replies call OpenRouter when an API key is configured.

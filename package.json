@@ -21,6 +21,7 @@
     "db:export:cloudflare": "node scripts/export-cloudflare-data.mjs"
   },
   "dependencies": {
+    "@assistant-ui/react": "^0.15.22",
     "@firebase/app": "^0.16.2",
     "@firebase/auth": "^1.13.6",
     "@radix-ui/react-dialog": "^1.1.23",

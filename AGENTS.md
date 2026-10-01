@@ -1,14 +1,13 @@
 # Workspace
 
 - Before editing files or starting a server, read `docs/workspace-handoff.md`. These instructions apply to every AI agent working in this repository, including agents entering through the legacy path.
-- The repository root is the only active Melearn source. On this machine it is `/Volumes/Extreme SSD/bill_dev/melearn_solana_chat`.
+- The repository root is the only active Melearn source.
 - Verify `pwd -P` and `git rev-parse --show-toplevel` before working. Both must identify that physical directory. A folder with the same name is not proof that it is the correct checkout.
 - `melearn_solana_chat/` inside the root is a compatibility symlink to the root, not another project. Do not replace it with a directory, clone/copy the repository into itself, or follow the link recursively.
 - Use `npm run dev` for local UI work and `npm start` after a production build. Both use `scripts/run-next.mjs`, the canonical directory, and port 43123. Do not bypass this runner with direct Next commands or silently choose another port.
 - If the preview shows old UI, inspect the listening process's working directory first. Do not restore old source, create another checkout, or overwrite current work to fix a server-path problem.
 - Stop only the identified preview when a restart is necessary. Do not kill all Node or editor processes.
-- The historical duplicate is preserved outside this repository under `/Volumes/Extreme SSD/bill_dev_archives/`. Do not run or edit that backup as the active app.
-- Preserve uncommitted changes. Do not reset, clean, delete backups, or copy archived databases/environment files over the active project without an explicit user request.
+- Preserve uncommitted changes. Do not reset, clean, or copy databases or environment files over the active project without an explicit user request.
 
 # Product structure
 
@@ -30,8 +29,6 @@
 - Use https://www.librechat.ai/ as the chat reference. Read `docs/chat-reference.md` before changing chat screens.
 
 # Component workflow
-
-- The user paused implementation and requested a detailed handoff plan only. Do not continue coding from that planning request. Partial changes made before the interruption are unaccepted work in progress; review them against `docs/interior-ui-plan.md` when a separate development task is assigned.
 
 - **Mandatory for every agent and delegated agent: load and reuse components before creating UI.** Inventory `components/ui` and shared business components, read the relevant implementations, and run `npx shadcn@latest info --json` before writing UI.
 - If an installed component or block meets the requirement, import and compose it. Do not create a parallel control, copy, or visual imitation.

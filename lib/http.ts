@@ -11,6 +11,7 @@ const messages = {
   TEACHER_UNAVAILABLE: { th: "ครูคนนี้ยังไม่เปิดในรอบนี้", en: "This teacher is not open in this MVP." },
   EMPTY: { th: "พิมพ์ข้อความก่อนส่ง", en: "Write a message before sending." },
   TOO_LONG: { th: "ข้อความยาวเกิน 2,000 ตัวอักษร", en: "Messages are limited to 2,000 characters." },
+  AI_UNAVAILABLE: { th: "AI ยังไม่พร้อมตอบ ลองใหม่อีกครั้งได้เลย", en: "The AI is unavailable right now. Please try again." },
   BAD_MESSAGE_ID: { th: "รหัสข้อความไม่ถูกต้อง", en: "That message id is not valid." },
   RATE_LIMIT: { th: "ส่งถี่เกินไป รอสักครู่แล้วลองใหม่", en: "Too many messages. Wait a moment and try again." },
   INVALID: { th: "ชื่อหรือรหัสผ่านไม่ถูกต้อง", en: "That name or password is not correct." },
