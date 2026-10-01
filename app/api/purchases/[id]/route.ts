@@ -9,10 +9,11 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const viewer = await getViewer();
   if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const { id } = await context.params;
-  const purchase = getPurchase(getDb(), id);
+  const db = await getDb();
+  const purchase = await getPurchase(db, id);
   if (!purchase || purchase.user_id !== viewer.user.id) return jsonError(viewer.locale, 404, "NOT_FOUND");
   return NextResponse.json({
     purchase,
-    entitlement: hasEntitlement(getDb(), viewer.user.id, purchase.lesson_id),
+    entitlement: await hasEntitlement(db, viewer.user.id, purchase.lesson_id),
   });
 }

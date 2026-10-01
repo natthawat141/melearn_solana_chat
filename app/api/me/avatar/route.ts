@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const file = form.get("image");
     if (!(file instanceof File) || file.size === 0 || file.size > PROFILE_IMAGE_MAX_BYTES) return jsonError(viewer.locale, 400, "PROFILE_IMAGE_INVALID");
     const avatarUrl = await normalizeProfileImage(new Uint8Array(await file.arrayBuffer()), file.type);
-    getDb().prepare("UPDATE users SET avatar_url = ? WHERE id = ?").run(avatarUrl, viewer.user.id);
+    await (await getDb()).prepare("UPDATE users SET avatar_url = ? WHERE id = ?").run(avatarUrl, viewer.user.id);
     return NextResponse.json({ avatarUrl });
   } catch {
     return jsonError(viewer.locale, 400, "PROFILE_IMAGE_INVALID");

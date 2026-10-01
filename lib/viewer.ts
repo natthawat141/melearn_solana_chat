@@ -38,14 +38,14 @@ function sanitizeGuestId(raw: string | null | undefined): string | null {
 }
 
 export async function getViewer(): Promise<Viewer> {
-  const db = getDb();
+  const db = await getDb();
   const jar = await cookies();
   const headerStore = await headers();
   const rawGuestId = headerStore.get("x-guest-id") || jar.get("ml_guest")?.value;
   const guestId = sanitizeGuestId(rawGuestId) || crypto.randomUUID();
 
-  const userId = readSession(jar.get("ml_session")?.value);
-  const user = userId ? findUser(db, userId) : null;
+  const userId = await readSession(jar.get("ml_session")?.value);
+  const user = userId ? await findUser(db, userId) : null;
   if (user) {
     return {
       user,
@@ -59,10 +59,10 @@ export async function getViewer(): Promise<Viewer> {
     };
   }
 
-  let guest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId) as GuestRow | undefined;
+  let guest = await db.prepare("SELECT * FROM guests WHERE id = ?").get<GuestRow>(guestId);
   if (!guest) {
-    db.prepare("INSERT INTO guests (id, locale, level, goal, onboarded, created_at) VALUES (?, 'en', NULL, NULL, 0, ?)").run(guestId, nowIso());
-    guest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId) as GuestRow;
+    await db.prepare("INSERT OR IGNORE INTO guests (id, locale, level, goal, onboarded, created_at) VALUES (?, 'en', NULL, NULL, 0, ?)").run(guestId, nowIso());
+    guest = (await db.prepare("SELECT * FROM guests WHERE id = ?").get<GuestRow>(guestId))!;
   }
   return {
     user: null,

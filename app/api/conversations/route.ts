@@ -7,8 +7,8 @@ import { getViewer } from "@/lib/viewer";
 export async function GET() {
   const viewer = await getViewer();
   if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
-  const db = getDb();
-  const conversations = listChats(db, viewer.ownerType, viewer.ownerId);
+  const db = await getDb();
+  const conversations = await listChats(db, viewer.ownerType, viewer.ownerId);
   return NextResponse.json({ conversations });
 }
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { lessonId?: string } | null;
   if (!body?.lessonId) return jsonError(viewer.locale, 400, "LESSON");
   try {
-    const opened = openConversation(getDb(), {
+    const opened = await openConversation(await getDb(), {
       ownerType: viewer.ownerType,
       ownerId: viewer.ownerId,
       lessonId: body.lessonId,

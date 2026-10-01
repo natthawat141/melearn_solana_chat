@@ -39,15 +39,15 @@ export async function PATCH(request: Request) {
   const locale = body.locale === "en" || body.locale === "th" ? body.locale : undefined;
   const level = body.level === null ? null : body.level && levels.has(body.level) ? body.level : undefined;
   const goal = body.goal === null ? null : body.goal && goals.has(body.goal) ? body.goal : undefined;
-  const db = getDb();
+  const db = await getDb();
   if (viewer.user) {
     const name = body.displayName?.trim();
     if (name !== undefined && (!name || name.length > 40)) return jsonError(viewer.locale, 400, "NAME");
     if (name && name.toLowerCase() !== viewer.user.displayName.toLowerCase()) {
-      const taken = db.prepare("SELECT id FROM users WHERE display_name = ? AND id != ?").get(name, viewer.user.id);
+      const taken = await db.prepare("SELECT id FROM users WHERE display_name = ? AND id != ?").get(name, viewer.user.id);
       if (taken) return jsonError(viewer.locale, 400, "TAKEN");
     }
-    db.prepare(
+    await db.prepare(
       `UPDATE users SET
          locale = COALESCE(?, locale),
          level = CASE WHEN ? THEN NULL ELSE COALESCE(?, level) END,
@@ -72,7 +72,7 @@ export async function PATCH(request: Request) {
       viewer.user.id,
     );
   } else {
-    db.prepare(
+    await db.prepare(
       `UPDATE guests SET
          locale = COALESCE(?, locale),
          level = CASE WHEN ? THEN NULL ELSE COALESCE(?, level) END,

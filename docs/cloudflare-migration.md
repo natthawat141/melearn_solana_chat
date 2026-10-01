@@ -4,9 +4,9 @@ The target the user chose: run the app on Workers, use D1 for accounts, history,
 
 ## What is already prepared
 
-- `cloudflare/migrations/`: a D1 schema that can hold the current data, including `avatar_url`, `education_stage`, and `preferred_subject`. Apply every migration in order.
+- `cloudflare/migrations/`: a D1 schema that can hold the current data, including `avatar_url`, `education_stage`, `preferred_subject`, and the existing quota `bonus` column. All five migrations are applied.
 - `scripts/export-cloudflare-data.mjs`: reads SQLite read-only in one snapshot and writes INSERT statements to a new file with mode 0600. It does not print user data, and it does not overwrite the source file or the source database.
-- The exported SQL has been loaded back into the new schema with sample data, including Thai text, quote characters, a profile image, and chat history.
+- The active `data/melearn.db` snapshot was imported into D1. Counts match: 7 users, 112 guests, 7 conversations, 25 messages, 7 progress records, and 5 quotas. Purchases and entitlements were empty. There are no orphan messages. The source SQLite database was not modified.
 
 Example command for the data move (not yet run against a real user database):
 
@@ -14,16 +14,18 @@ Example command for the data move (not yet run against a real user database):
 npm run db:export:cloudflare -- --database '/absolute/path/melearn.db' --output '/private/path/melearn-import.sql'
 ```
 
-The export contains accounts and password hashes. Keep it out of Git and out of logs. Import into a new D1 database before opening it to users. If the import fails, fix the cause or create a fresh staging database. Do not rerun the import on a database that is only partly loaded without checking it first.
+The export contained accounts and password hashes and was kept in a mode-0600 temporary file outside the repository; the file was removed after import and count verification. `credit_purchases` was a legacy table with zero rows. Pending wallet challenges and email verification/reset codes were intentionally not imported because they expire or must be reissued.
 
-Pending wallet challenges and `data/session.secret` are not migrated. Wallets must sign a new message, and users must sign in again after the move. Accounts and history stay. Existing images remain in `avatar_url` in the export. After an R2 adapter exists, move the images to R2 and update the URLs inside D1.
+Pending wallet challenges and `data/session.secret` are not migrated. Wallets must sign a new message, and users must sign in again after the move. Existing `avatar_url` values were preserved in D1; one is a data URL and two are external HTTPS URLs. New uploads and the existing image data still need an application R2 adapter before the bucket serves profile photos.
 
-## Runtime work still to do
+## Runtime status
 
-- Add an OpenNext adapter for the current Next.js version, and set Workers bindings after the resource names exist.
-- Change synchronous `node:sqlite` queries to asynchronous D1 queries across auth, viewer, learning, and purchases.
+- OpenNext is configured for the existing Next.js app and deployed through `wrangler.jsonc`.
+- Auth, viewer, learning, quota, email-code, wallet, and purchase queries use an async D1 adapter on Workers and keep SQLite only for local development.
+- `chat.melearn.io/*` is attached as a Worker Route on the `melearn.io` zone. The hostname already had DNS records, so a route was used instead of deleting the records for a Custom Domain.
 - Change callback transactions to a D1 batch with SQL guards so nonce, quota, and duplicate messages are still enforced in the database.
-- Use a Workers `SESSION_SECRET`. Stop depending on a local file, and check that password hashing works on workerd while keeping existing password hashes.
+- Session signing reads the Workers Secrets Store binding; local development still falls back to `data/session.secret`.
+- New profile image uploads still use the existing data URL path. The R2 binding is provisioned, but an R2 image adapter should be added before storing larger user media.
 - Serve images from R2, and resize or validate them in a way Workers supports. The current native `sharp` path still has to change.
 - Move model calls to a Workers AI binding. Point rate limits and diagnostics at Cloudflare, and stop depending on process memory or local files.
 - Test MetaMask, Phantom, and Solflare auth, plus the learning and profile flows, on workerd before deploy.

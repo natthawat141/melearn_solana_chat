@@ -9,6 +9,11 @@
     "dev": "node scripts/run-next.mjs dev",
     "build": "next build --turbopack",
     "start": "node scripts/run-next.mjs start",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "preview:cloudflare": "npm run build:cloudflare && opennextjs-cloudflare preview --config wrangler.jsonc",
+    "deploy:cloudflare": "npm run build:cloudflare && opennextjs-cloudflare deploy --config wrangler.jsonc",
+    "upload:cloudflare": "npm run build:cloudflare && opennextjs-cloudflare upload --config wrangler.jsonc",
+    "cf:typegen": "wrangler types --config wrangler.jsonc --env-interface CloudflareEnv cloudflare-env.d.ts",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "check:public": "node scripts/check-public-repo.mjs",
@@ -45,6 +50,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@opennextjs/cloudflare": "^1.20.7",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -54,6 +60,7 @@
     "sharp": "^0.35.4",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.145.0"
   }
 }

@@ -37,8 +37,8 @@ export async function POST(request: Request) {
     return jsonError(viewer.locale, 400, "PASSWORD_SHORT");
   }
 
-  const db = getDb();
-  const existing = findUserByNameOrEmail(db, email);
+  const db = await getDb();
+  const existing = await findUserByNameOrEmail(db, email);
   if (existing) {
     return jsonError(viewer.locale, 400, "EMAIL_TAKEN");
   }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const displayName = body.displayName?.trim() || email.split("@")[0];
   const passwordHash = hashPassword(password);
 
-  const code = issueEmailOtp(db, email, "verify_email", { passwordHash, displayName }, 10);
+  const code = await issueEmailOtp(db, email, "verify_email", { passwordHash, displayName }, 10);
   const sendRes = await sendOtpEmail({
     email,
     code,

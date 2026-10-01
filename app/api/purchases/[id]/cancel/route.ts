@@ -10,10 +10,11 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const { id } = await context.params;
   try {
-    const purchase = cancelPurchase(getDb(), viewer.user.id, id);
+    const db = await getDb();
+    const purchase = await cancelPurchase(db, viewer.user.id, id);
     return NextResponse.json({
       purchase,
-      entitlement: hasEntitlement(getDb(), viewer.user.id, purchase.lesson_id),
+      entitlement: await hasEntitlement(db, viewer.user.id, purchase.lesson_id),
     });
   } catch {
     return jsonError(viewer.locale, 404, "NOT_FOUND");

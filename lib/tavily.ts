@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/types";
+import { runtimeEnv } from "@/lib/runtime-env";
 
 type TavilyResult = { title?: unknown; url?: unknown; content?: unknown };
 type TavilyResponse = { results?: TavilyResult[] };
@@ -33,7 +34,7 @@ function safeSourceUrl(value: string): string | null {
 }
 
 export async function searchTavily(text: string, locale: Locale): Promise<TavilySource[]> {
-  const apiKey = process.env.TAVILY_API_KEY?.trim();
+  const apiKey = await runtimeEnv("TAVILY_API_KEY");
   if (!apiKey || !shouldSearchWeb(text, true)) return [];
   try {
     const query = cleanSearchQuery(text).slice(0, 500);

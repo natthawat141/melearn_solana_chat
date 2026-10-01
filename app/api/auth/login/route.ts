@@ -15,13 +15,13 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { displayName?: string; password?: string } | null;
   if (!body) return jsonError(viewer.locale, 400, "INVALID");
   try {
-    const user = loginUser(getDb(), {
+    const user = await loginUser(await getDb(), {
       displayName: body.displayName || "",
       password: body.password || "",
       guestId: viewer.guestId,
     });
     const jar = await cookies();
-    jar.set("ml_session", signSession(user.id), {
+    jar.set("ml_session", await signSession(user.id), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

@@ -8,10 +8,10 @@ The competition source is public at https://github.com/natthawat141/melearn_sola
 - Cloudflare account: Melearn.vmi. The account ID and intended hostname `chat.melearn.io` are recorded in `cloudflare/deployment-target.json`. That file contains public resource identifiers and ordinary configuration, never secret values. It is a deployment manifest, not a working Wrangler configuration.
 - Cloudflare Secrets Store `melearn-chat` contains the active AI, Tavily, Supadata, and Resend API keys, plus a newly generated production session secret. The names are prefixed `MELEARN_CHAT_` to isolate this application. Their bindings are declared in Wrangler for the private bootstrap Worker.
 - Local `.env.local` and the SQLite database remain private and usable for development. Legacy Supabase/Dynamic/MoonPay credentials were not uploaded because this app no longer uses them.
-- D1 `melearn-chat` exists in APAC and all four schema migrations are applied; it is empty and has no imported user records.
+- D1 `melearn-chat` exists in APAC and all five schema migrations are applied. The active SQLite snapshot was imported and verified: 7 users, 112 guests, 7 conversations, 25 messages, 7 progress records, and 5 quotas; there are no orphan messages. Purchases and entitlements were empty. The local SQLite database remains unchanged and is still the development app's active store.
 - Worker `melearn-chat` has a bootstrap version uploaded with D1 and Secrets Store bindings. `workers.dev`, preview URLs, and routes are disabled, and Wrangler confirmed no deployment targets. The bootstrap responds with migration-pending if later given a route; it is not the app deployment.
 - R2 bucket `melearn-chat-uploads-prod` exists in APAC and is bound to the bootstrap Worker as `UPLOADS`.
-- The app has not been deployed to Workers. `chat.melearn.io` has not been attached. SQLite, native image processing, and other runtime dependencies still need the migration described in `docs/cloudflare-migration.md`.
+- The OpenNext app is deployed to Worker `melearn-chat` and `chat.melearn.io/*` is attached as a Worker Route on the `melearn.io` zone. The live homepage and `/api/me` returned HTTP 200 after deployment. Profile media still uses the existing data URL path; the R2 binding is ready for a later media adapter.
 
 ## Before publishing source
 

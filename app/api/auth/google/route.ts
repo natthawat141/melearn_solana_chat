@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const user = loginWithGoogle(getDb(), {
+    const user = await loginWithGoogle(await getDb(), {
       googleUid: result.identity.uid,
       displayName: result.identity.displayName,
       photoUrl: result.identity.photoUrl,
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       locale: viewer.locale,
     });
     const jar = await cookies();
-    jar.set("ml_session", signSession(user.id), {
+    jar.set("ml_session", await signSession(user.id), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

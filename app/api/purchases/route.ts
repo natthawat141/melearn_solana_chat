@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { lessonId?: string } | null;
   if (!body?.lessonId) return jsonError(viewer.locale, 400, "LESSON");
   try {
-    const purchase = createPurchase(getDb(), viewer.user.id, body.lessonId);
+    const purchase = await createPurchase(await getDb(), viewer.user.id, body.lessonId);
     return NextResponse.json({ purchase });
   } catch (error) {
     const code = error instanceof Error ? error.message : "LESSON";

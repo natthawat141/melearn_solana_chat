@@ -1,0 +1,70 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "melearn-chat",
+  "main": ".open-next/worker.js",
+  "account_id": "ebc73340b6aad96d594e297f148a164f",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "chat.melearn.io/*", "zone_name": "melearn.io" }
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "melearn-chat",
+      "database_id": "07a11351-59de-4c47-a0aa-6d0f900b49ac",
+      "migrations_dir": "./cloudflare/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "melearn-chat-uploads-prod"
+    }
+  ],
+  "secrets_store_secrets": [
+    {
+      "binding": "AI_API_KEY",
+      "store_id": "425e455964c1434db8032613229d792d",
+      "secret_name": "MELEARN_CHAT_AI_API_KEY"
+    },
+    {
+      "binding": "TAVILY_API_KEY",
+      "store_id": "425e455964c1434db8032613229d792d",
+      "secret_name": "MELEARN_CHAT_TAVILY_API_KEY"
+    },
+    {
+      "binding": "SUPADATA_API_KEY",
+      "store_id": "425e455964c1434db8032613229d792d",
+      "secret_name": "MELEARN_CHAT_SUPADATA_API_KEY"
+    },
+    {
+      "binding": "RESEND_API_KEY",
+      "store_id": "425e455964c1434db8032613229d792d",
+      "secret_name": "MELEARN_CHAT_RESEND_API_KEY"
+    },
+    {
+      "binding": "SESSION_SECRET",
+      "store_id": "425e455964c1434db8032613229d792d",
+      "secret_name": "MELEARN_CHAT_SESSION_SECRET"
+    }
+  ],
+  "vars": {
+    "AI_BASE_URL": "https://openrouter.ai/api/v1",
+    "AI_MODEL": "openai/gpt-6-luna-pro",
+    "SOLANA_NETWORK": "devnet",
+    "SOLANA_RPC_URL": "https://api.devnet.solana.com",
+    "PAYMENT_RECIPIENT": "CByHmPLFQsDEoa8WvEGozBjfgMrHx36eGczvsiyCTRbS",
+    "WALLET_AUTH_ORIGIN": "https://chat.melearn.io",
+    "EMAIL_FROM": "Melearn Chat <auth@melearn.io>"
+  }
+}

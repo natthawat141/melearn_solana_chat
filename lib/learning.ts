@@ -58,8 +58,8 @@ export type ConversationRow = {
   updated_at: string;
 };
 
-export function hasEntitlement(db: AppDatabase, userId: string, lessonId: string) {
-  return Boolean(db.prepare("SELECT id FROM entitlements WHERE user_id = ? AND lesson_id = ?").get(userId, lessonId));
+export async function hasEntitlement(db: AppDatabase, userId: string, lessonId: string) {
+  return Boolean(await db.prepare("SELECT id FROM entitlements WHERE user_id = ? AND lesson_id = ?").get(userId, lessonId));
 }
 
 export function canEnterLesson(db: AppDatabase, ownerType: OwnerType, ownerId: string, lessonId: string) {
@@ -70,8 +70,8 @@ export function canEnterLesson(db: AppDatabase, ownerType: OwnerType, ownerId: s
   return { lesson, teacher };
 }
 
-export function readProgress(db: AppDatabase, ownerType: OwnerType, ownerId: string, lessonId: string, total: number): ProgressState | null {
-  const row = db.prepare("SELECT * FROM progress WHERE owner_type = ? AND owner_id = ? AND lesson_id = ?").get(ownerType, ownerId, lessonId) as ProgressRow | undefined;
+export async function readProgress(db: AppDatabase, ownerType: OwnerType, ownerId: string, lessonId: string, total: number): Promise<ProgressState | null> {
+  const row = await db.prepare("SELECT * FROM progress WHERE owner_type = ? AND owner_id = ? AND lesson_id = ?").get<ProgressRow>(ownerType, ownerId, lessonId);
   if (!row) return null;
   let results: boolean[] = [];
   try {
@@ -90,8 +90,8 @@ export function readProgress(db: AppDatabase, ownerType: OwnerType, ownerId: str
   };
 }
 
-function saveProgress(db: AppDatabase, ownerType: OwnerType, ownerId: string, lessonId: string, version: number, progress: ProgressState) {
-  db.prepare(
+async function saveProgress(db: AppDatabase, ownerType: OwnerType, ownerId: string, lessonId: string, version: number, progress: ProgressState) {
+  await db.prepare(
     `INSERT INTO progress (owner_type, owner_id, lesson_id, lesson_version, status, attempts, hints_used, phase, practice_index, results_json, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(owner_type, owner_id, lesson_id) DO UPDATE SET
@@ -105,27 +105,28 @@ function saveProgress(db: AppDatabase, ownerType: OwnerType, ownerId: string, le
   ).run(ownerType, ownerId, lessonId, version, progress.status, progress.attempts, progress.hintsUsed, progress.phase, progress.practiceIndex, JSON.stringify(progress.results), nowIso());
 }
 
-export function listMessages(db: AppDatabase, conversationId: string) {
-  return db.prepare("SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, id ASC").all(conversationId) as MessageRow[];
+export async function listMessages(db: AppDatabase, conversationId: string) {
+  return db.prepare("SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, id ASC").all<MessageRow>(conversationId);
 }
 
-export function openConversation(db: AppDatabase, input: { ownerType: OwnerType; ownerId: string; lessonId: string; locale: Locale }) {
+export async function openConversation(db: AppDatabase, input: { ownerType: OwnerType; ownerId: string; lessonId: string; locale: Locale }) {
   const { lesson, teacher } = canEnterLesson(db, input.ownerType, input.ownerId, input.lessonId);
-  const existing = db
+  const existing = await db
     .prepare("SELECT * FROM conversations WHERE owner_type = ? AND owner_id = ? AND lesson_id = ? ORDER BY updated_at DESC LIMIT 1")
-    .get(input.ownerType, input.ownerId, lesson.id) as ConversationRow | undefined;
+    .get<ConversationRow>(input.ownerType, input.ownerId, lesson.id);
   if (existing) {
-    const progress = readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length) ?? emptyProgress(lesson.practice.length);
-    if (!readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length)) {
-      saveProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.version, progress);
+    const existingProgress = await readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length);
+    const progress = existingProgress ?? emptyProgress(lesson.practice.length);
+    if (!existingProgress) {
+      await saveProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.version, progress);
     }
-    return { conversation: existing, messages: listMessages(db, existing.id), progress, lesson, teacher };
+    return { conversation: existing, messages: await listMessages(db, existing.id), progress, lesson, teacher };
   }
   const id = crypto.randomUUID();
   const created = nowIso();
   const progress = emptyProgress(lesson.practice.length);
-  withTransaction(db, () => {
-    db.prepare("INSERT INTO conversations (id, owner_type, owner_id, teacher_id, lesson_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
+  await withTransaction(db, async () => {
+    await db.prepare("INSERT INTO conversations (id, owner_type, owner_id, teacher_id, lesson_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(
       id,
       input.ownerType,
       input.ownerId,
@@ -134,16 +135,16 @@ export function openConversation(db: AppDatabase, input: { ownerType: OwnerType;
       created,
       created,
     );
-    db.prepare("INSERT INTO messages (id, conversation_id, role, text, client_message_id, mode, created_at) VALUES (?, ?, 'assistant', ?, NULL, 'teach', ?)").run(
+    await db.prepare("INSERT INTO messages (id, conversation_id, role, text, client_message_id, mode, created_at) VALUES (?, ?, 'assistant', ?, NULL, 'teach', ?)").run(
       crypto.randomUUID(),
       id,
       openingMessage(teacher, lesson, input.locale),
       created,
     );
-    saveProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.version, progress);
+    await saveProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.version, progress);
   });
-  const conversation = db.prepare("SELECT * FROM conversations WHERE id = ?").get(id) as ConversationRow;
-  return { conversation, messages: listMessages(db, id), progress, lesson, teacher };
+  const conversation = (await db.prepare("SELECT * FROM conversations WHERE id = ?").get<ConversationRow>(id))!;
+  return { conversation, messages: await listMessages(db, id), progress, lesson, teacher };
 }
 
 function historyFor(messages: MessageRow[]) {
@@ -169,7 +170,7 @@ export async function handleMessage(
   },
 ) {
   if (!/^[A-Za-z0-9_-]{8,80}$/.test(input.clientMessageId)) throw new LearningError("BAD_MESSAGE_ID", 400);
-  const conversation = db.prepare("SELECT * FROM conversations WHERE id = ?").get(input.conversationId) as ConversationRow | undefined;
+  const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").get<ConversationRow>(input.conversationId);
   if (!conversation || conversation.owner_type !== input.ownerType || conversation.owner_id !== input.ownerId) {
     throw new LearningError("NOT_FOUND", 404);
   }
@@ -178,23 +179,23 @@ export async function handleMessage(
   if (input.mode === "teach" && !text) throw new LearningError("EMPTY", 400);
   if (text.length > 2000) throw new LearningError("TOO_LONG", 400);
 
-  const existingUser = db
+  const existingUser = await db
     .prepare("SELECT * FROM messages WHERE conversation_id = ? AND client_message_id = ? AND role = 'user'")
-    .get(conversation.id, input.clientMessageId) as MessageRow | undefined;
-  const existingAssistant = db
+    .get<MessageRow>(conversation.id, input.clientMessageId);
+  const existingAssistant = await db
     .prepare("SELECT * FROM messages WHERE conversation_id = ? AND client_message_id = ? AND role = 'assistant'")
-    .get(conversation.id, input.clientMessageId) as MessageRow | undefined;
+    .get<MessageRow>(conversation.id, input.clientMessageId);
   if (existingUser && existingAssistant) {
-    const progress = readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length) ?? emptyProgress(lesson.practice.length);
-    return { messages: listMessages(db, conversation.id), progress, assessment: null, idempotent: true, quota: readQuota(db, input.ownerType, input.ownerId) };
+    const progress = (await readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length)) ?? emptyProgress(lesson.practice.length);
+    return { messages: await listMessages(db, conversation.id), progress, assessment: null, idempotent: true, quota: await readQuota(db, input.ownerType, input.ownerId) };
   }
   if (!existingUser) {
-    const gate = readQuota(db, input.ownerType, input.ownerId);
+    const gate = await readQuota(db, input.ownerType, input.ownerId);
     if (gate.blocked) throw new LearningError("QUOTA", 429, false, gate.resetAt);
   }
 
-  const prior = listMessages(db, conversation.id);
-  const stored = readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length) ?? emptyProgress(lesson.practice.length);
+  const prior = await listMessages(db, conversation.id);
+  const stored = (await readProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.practice.length)) ?? emptyProgress(lesson.practice.length);
   let messageText = text;
   let assessment: Awaited<ReturnType<typeof respond>>["assessment"] = null;
   let nextProgress = stored;
@@ -229,9 +230,9 @@ export async function handleMessage(
   const createdAt = new Date();
   const userAt = createdAt.toISOString();
   const assistantAt = new Date(createdAt.getTime() + 1).toISOString();
-  withTransaction(db, () => {
+  await withTransaction(db, async () => {
     if (!existingUser) {
-      db.prepare("INSERT INTO messages (id, conversation_id, role, text, client_message_id, mode, created_at) VALUES (?, ?, 'user', ?, ?, ?, ?)").run(
+      await db.prepare("INSERT INTO messages (id, conversation_id, role, text, client_message_id, mode, created_at) VALUES (?, ?, 'user', ?, ?, ?, ?)").run(
         crypto.randomUUID(),
         conversation.id,
         text || input.mode,
@@ -239,9 +240,9 @@ export async function handleMessage(
         input.mode,
         userAt,
       );
-      consumePrompt(db, input.ownerType, input.ownerId, createdAt.getTime());
+      await consumePrompt(db, input.ownerType, input.ownerId, createdAt.getTime());
     }
-    db.prepare("INSERT INTO messages (id, conversation_id, role, text, client_message_id, mode, created_at) VALUES (?, ?, 'assistant', ?, ?, ?, ?)").run(
+    await db.prepare("INSERT INTO messages (id, conversation_id, role, text, client_message_id, mode, created_at) VALUES (?, ?, 'assistant', ?, ?, ?, ?)").run(
       crypto.randomUUID(),
       conversation.id,
       messageText,
@@ -249,26 +250,26 @@ export async function handleMessage(
       input.mode,
       assistantAt,
     );
-    saveProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.version, nextProgress);
-    db.prepare("UPDATE conversations SET updated_at = ? WHERE id = ?").run(assistantAt, conversation.id);
+    await saveProgress(db, input.ownerType, input.ownerId, lesson.id, lesson.version, nextProgress);
+    await db.prepare("UPDATE conversations SET updated_at = ? WHERE id = ?").run(assistantAt, conversation.id);
   });
 
   return {
-    messages: listMessages(db, conversation.id),
+    messages: await listMessages(db, conversation.id),
     progress: nextProgress,
     assessment,
     idempotent: false,
-    quota: readQuota(db, input.ownerType, input.ownerId),
+    quota: await readQuota(db, input.ownerType, input.ownerId),
   };
 }
 
-export function listLearning(db: AppDatabase, ownerType: OwnerType, ownerId: string) {
+export async function listLearning(db: AppDatabase, ownerType: OwnerType, ownerId: string) {
   return db
     .prepare("SELECT * FROM progress WHERE owner_type = ? AND owner_id = ? ORDER BY updated_at DESC")
-    .all(ownerType, ownerId) as ProgressRow[];
+    .all<ProgressRow>(ownerType, ownerId);
 }
 
-export function listChats(db: AppDatabase, ownerType: OwnerType, ownerId: string) {
+export async function listChats(db: AppDatabase, ownerType: OwnerType, ownerId: string) {
   return db
     .prepare(
       `SELECT c.*, (
@@ -278,16 +279,16 @@ export function listChats(db: AppDatabase, ownerType: OwnerType, ownerId: string
        WHERE c.owner_type = ? AND c.owner_id = ?
        ORDER BY c.updated_at DESC`,
     )
-    .all(ownerType, ownerId) as Array<ConversationRow & { last_text: string | null }>;
+    .all<ConversationRow & { last_text: string | null }>(ownerType, ownerId);
 }
 
-export function deleteLearningHistory(db: AppDatabase, userId: string) {
-  withTransaction(db, () => {
-    const conversations = db.prepare("SELECT id FROM conversations WHERE owner_type = 'user' AND owner_id = ?").all(userId) as Array<{ id: string }>;
+export async function deleteLearningHistory(db: AppDatabase, userId: string) {
+  await withTransaction(db, async () => {
+    const conversations = await db.prepare("SELECT id FROM conversations WHERE owner_type = 'user' AND owner_id = ?").all<{ id: string }>(userId);
     for (const conversation of conversations) {
-      db.prepare("DELETE FROM messages WHERE conversation_id = ?").run(conversation.id);
+      await db.prepare("DELETE FROM messages WHERE conversation_id = ?").run(conversation.id);
     }
-    db.prepare("DELETE FROM conversations WHERE owner_type = 'user' AND owner_id = ?").run(userId);
-    db.prepare("DELETE FROM progress WHERE owner_type = 'user' AND owner_id = ?").run(userId);
+    await db.prepare("DELETE FROM conversations WHERE owner_type = 'user' AND owner_id = ?").run(userId);
+    await db.prepare("DELETE FROM progress WHERE owner_type = 'user' AND owner_id = ?").run(userId);
   });
 }

@@ -11,13 +11,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const body = (await request.json().catch(() => null)) as { attemptId?: string; answer?: string } | null;
   if (!body?.attemptId || body.answer === undefined) return jsonError(viewer.locale, 400, "BAD_MESSAGE_ID");
   try {
-    const opened = openConversation(getDb(), {
+    const db = await getDb();
+    const opened = await openConversation(db, {
       ownerType: viewer.ownerType,
       ownerId: viewer.ownerId,
       lessonId: id,
       locale: viewer.locale,
     });
-    const result = await handleMessage(getDb(), {
+    const result = await handleMessage(db, {
       ownerType: viewer.ownerType,
       ownerId: viewer.ownerId,
       conversationId: opened.conversation.id,

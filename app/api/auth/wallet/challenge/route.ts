@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     if (!rateLimit(`wallet-login:${clientIp(headerStore)}`, 10, 60_000)) throw new WalletRateLimitError(60, stage);
     if (!body || ![body.publicKey, body.chain, body.walletName].every(value => typeof value === "string" && value.length > 0 && value.length < 2048)) throw new WalletAuthError("WALLET_INPUT_INVALID", stage);
     stage = "nonce";
-    const issued = issueWalletLogin(getDb(), { publicKey: body.publicKey!, chain: body.chain!, walletName: body.walletName!, chainId: body.chainId }, origin, viewer.guestId);
+    const issued = await issueWalletLogin(await getDb(), { publicKey: body.publicKey!, chain: body.chain!, walletName: body.walletName!, chainId: body.chainId }, origin, viewer.guestId);
     walletSuccess(context());
     return NextResponse.json({ ...issued, requestId });
   } catch (error) {

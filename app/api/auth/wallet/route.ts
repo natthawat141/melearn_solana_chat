@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     if (!rateLimit(`wallet-verify:${clientIp(headerStore)}`, 20, 60_000)) throw new WalletRateLimitError(60);
     if (!body || ![body.publicKey, body.chain, body.walletName, body.nonce, body.signature].every(value => typeof value === "string" && value.length > 0 && value.length < 2048)) throw new WalletAuthError("WALLET_INPUT_INVALID", stage);
     stage = "account";
-    const user = await completeWalletLogin(getDb(), {
+    const user = await completeWalletLogin(await getDb(), {
       publicKey: body.publicKey!,
       chain: body.chain!,
       walletName: body.walletName!,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     });
     stage = "session";
     const jar = await cookies();
-    jar.set("ml_session", signSession(user.id), {
+    jar.set("ml_session", await signSession(user.id), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

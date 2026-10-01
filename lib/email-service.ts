@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import type { AppDatabase } from "@/lib/db";
 import type { Locale } from "@/lib/types";
+import { runtimeEnv } from "@/lib/runtime-env";
 
 // Blacklist of common disposable email domains to prevent spam accounts
 export const DISPOSABLE_EMAIL_DOMAINS = new Set([
@@ -45,16 +46,16 @@ export function isValidPassword(password: string): boolean {
 
 export type EmailCodeType = "verify_email" | "reset_password";
 
-export function issueEmailOtp(
+export async function issueEmailOtp(
   db: AppDatabase,
   email: string,
   type: EmailCodeType,
   payload?: Record<string, unknown>,
   ttlMinutes = 10
-): string {
+): Promise<string> {
   const cleanEmail = email.trim().toLowerCase();
   // Invalidate prior unused OTPs for this email and type
-  db.prepare(
+  await db.prepare(
     "UPDATE email_codes SET used_at = ? WHERE email = ? AND type = ? AND used_at IS NULL"
   ).run(Date.now(), cleanEmail, type);
 
@@ -65,32 +66,32 @@ export function issueEmailOtp(
   const createdAt = new Date().toISOString();
   const payloadJson = payload ? JSON.stringify(payload) : null;
 
-  db.prepare(
+  await db.prepare(
     "INSERT INTO email_codes (id, email, code, type, payload_json, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
   ).run(id, cleanEmail, code, type, payloadJson, expiresAt, createdAt);
 
   return code;
 }
 
-export function verifyEmailOtp(
+export async function verifyEmailOtp(
   db: AppDatabase,
   email: string,
   code: string,
   type: EmailCodeType,
   maxAttempts = 5
-): { ok: boolean; payload?: Record<string, unknown>; error?: string } {
+): Promise<{ ok: boolean; payload?: Record<string, unknown>; error?: string }> {
   const cleanEmail = email.trim().toLowerCase();
   const cleanCode = code.trim();
 
-  const record = db.prepare(
+  const record = await db.prepare(
     "SELECT * FROM email_codes WHERE email = ? AND type = ? AND used_at IS NULL ORDER BY created_at DESC LIMIT 1"
-  ).get(cleanEmail, type) as {
+  ).get<{
     id: string;
     code: string;
     payload_json: string | null;
     expires_at: number;
     attempts?: number;
-  } | undefined;
+  }>(cleanEmail, type);
 
   if (!record) {
     return { ok: false, error: "INVALID_CODE" };
@@ -104,15 +105,15 @@ export function verifyEmailOtp(
 
   if (record.code !== cleanCode) {
     if (currentAttempts >= maxAttempts) {
-      db.prepare("UPDATE email_codes SET used_at = ?, attempts = ? WHERE id = ?").run(Date.now(), currentAttempts, record.id);
+      await db.prepare("UPDATE email_codes SET used_at = ?, attempts = ? WHERE id = ?").run(Date.now(), currentAttempts, record.id);
       return { ok: false, error: "TOO_MANY_ATTEMPTS" };
     }
-    db.prepare("UPDATE email_codes SET attempts = ? WHERE id = ?").run(currentAttempts, record.id);
+    await db.prepare("UPDATE email_codes SET attempts = ? WHERE id = ?").run(currentAttempts, record.id);
     return { ok: false, error: "INVALID_CODE" };
   }
 
   // Mark as used
-  db.prepare("UPDATE email_codes SET used_at = ?, attempts = ? WHERE id = ?").run(Date.now(), currentAttempts, record.id);
+  await db.prepare("UPDATE email_codes SET used_at = ?, attempts = ? WHERE id = ?").run(Date.now(), currentAttempts, record.id);
 
   let payload: Record<string, unknown> | undefined;
   if (record.payload_json) {
@@ -219,7 +220,7 @@ export async function sendOtpEmail({
   type: EmailCodeType;
   locale?: Locale;
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const apiKey = await runtimeEnv("RESEND_API_KEY");
   if (!apiKey) {
     console.warn("[email] RESEND_API_KEY is missing. Email will not be sent.");
     return { ok: false, error: "EMAIL_KEY_MISSING" };

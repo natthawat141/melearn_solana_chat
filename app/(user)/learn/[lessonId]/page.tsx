@@ -32,7 +32,8 @@ export default async function LearnPage({ params }: { params: Promise<{ lessonId
     );
   }
   try {
-    const opened = openConversation(getDb(), {
+    const db = await getDb();
+    const opened = await openConversation(db, {
       ownerType: viewer.ownerType,
       ownerId: viewer.ownerId,
       lessonId,
@@ -50,7 +51,7 @@ export default async function LearnPage({ params }: { params: Promise<{ lessonId
           text: localizedHistoryText(opened.teacher, opened.lesson, message.text, viewer.locale),
         }))}
         initialProgress={opened.progress}
-        initialQuota={readQuota(getDb(), viewer.ownerType, viewer.ownerId)}
+        initialQuota={await readQuota(db, viewer.ownerType, viewer.ownerId)}
         isGuest={!viewer.user}
       />
     );

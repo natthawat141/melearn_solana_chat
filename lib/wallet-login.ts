@@ -69,7 +69,7 @@ function statement(walletName: WalletName) {
   return `Sign in to Melearn Chat with ${walletName}. This does not authorize a transaction.`;
 }
 
-export function issueWalletLogin(db: AppDatabase, input: WalletInput, origin: string, guestId: string) {
+export async function issueWalletLogin(db: AppDatabase, input: WalletInput, origin: string, guestId: string) {
   const wallet = parseWallet(input);
   const url = originUrl(origin);
   if (wallet.chain === "ETH" && (!Number.isSafeInteger(input.chainId) || input.chainId! <= 0)) fail();
@@ -83,7 +83,7 @@ export function issueWalletLogin(db: AppDatabase, input: WalletInput, origin: st
   const message = wallet.chain === "ETH"
     ? new SiweMessage({ ...fields, address: getAddress(wallet.publicKey), chainId: input.chainId! }).prepareMessage()
     : createSignInMessageText({ ...fields, chainId: "solana:devnet" });
-  db.prepare("INSERT INTO wallet_challenges (nonce, user_id, message, expires_at, used) VALUES (?, ?, ?, ?, 0)").run(nonce, wallet.publicKey, message, expiresAt);
+  await db.prepare("INSERT INTO wallet_challenges (nonce, user_id, message, expires_at, used) VALUES (?, ?, ?, ?, 0)").run(nonce, wallet.publicKey, message, expiresAt);
   return { nonce, message, expiresAt };
 }
 
@@ -93,8 +93,7 @@ export async function completeWalletLogin(
 ) {
   const wallet = parseWallet(input);
   const url = originUrl(input.origin);
-  const challenge = db.prepare("SELECT message, expires_at, used FROM wallet_challenges WHERE nonce = ? AND user_id = ?").get(input.nonce, wallet.publicKey) as
-    | { message: string; expires_at: string; used: number } | undefined;
+  const challenge = await db.prepare("SELECT message, expires_at, used FROM wallet_challenges WHERE nonce = ? AND user_id = ?").get<{ message: string; expires_at: string; used: number }>(input.nonce, wallet.publicKey);
   if (!challenge || challenge.used || !Number.isFinite(Date.parse(challenge.expires_at)) || Date.parse(challenge.expires_at) <= Date.now()) fail("CHALLENGE_EXPIRED", "challenge");
   let parsed;
   try {
@@ -127,8 +126,8 @@ export async function completeWalletLogin(
     fail("SIGNATURE_INVALID", "signature");
   }
   // Consume once and create/migrate the account together. A failure rolls both back.
-  return withTransaction(db, () => {
-    const updated = db.prepare("UPDATE wallet_challenges SET used = 1 WHERE nonce = ? AND user_id = ? AND message = ? AND used = 0 AND expires_at > ?")
+  return withTransaction(db, async () => {
+    const updated = await db.prepare("UPDATE wallet_challenges SET used = 1 WHERE nonce = ? AND user_id = ? AND message = ? AND used = 0 AND expires_at > ?")
       .run(input.nonce, wallet.publicKey, challenge.message, new Date().toISOString());
     if (Number(updated.changes) !== 1) fail("CHALLENGE_EXPIRED", "challenge");
     return loginWithWallet(db, { publicKey: wallet.publicKey, guestId: input.guestId, locale: input.locale });

@@ -17,7 +17,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ id: st
   const viewer = await getViewer();
   const lessons = lessonsForTeacher(teacher.id);
   const progress = viewer.user
-    ? new Map(listLearning(getDb(), "user", viewer.user.id).map((row) => [row.lesson_id, row.status]))
+    ? new Map((await listLearning(await getDb(), "user", viewer.user.id)).map((row) => [row.lesson_id, row.status]))
     : new Map<string, string>();
   const image = teacherImage(teacher);
 

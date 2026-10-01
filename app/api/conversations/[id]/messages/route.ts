@@ -20,7 +20,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const body = (await request.json().catch(() => null)) as { clientMessageId?: string; text?: string; mode?: ChatMode } | null;
   if (!body?.clientMessageId || !body.mode || !modes.has(body.mode)) return jsonError(viewer.locale, 400, "BAD_MESSAGE_ID");
   try {
-    const result = await handleMessage(getDb(), {
+    const result = await handleMessage(await getDb(), {
       ownerType: viewer.ownerType,
       ownerId: viewer.ownerId,
       conversationId: id,

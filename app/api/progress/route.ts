@@ -5,7 +5,7 @@ import { getViewer } from "@/lib/viewer";
 
 export async function GET() {
   const viewer = await getViewer();
-  const rows = listLearning(getDb(), viewer.ownerType, viewer.ownerId);
+  const rows = await listLearning(await getDb(), viewer.ownerType, viewer.ownerId);
   return NextResponse.json({
     ownerType: viewer.ownerType,
     progress: rows.map((row) => ({

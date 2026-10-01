@@ -28,8 +28,8 @@ export async function POST(request: Request) {
   const email = body.email.trim().toLowerCase();
   const code = body.code.trim();
 
-  const db = getDb();
-  const result = verifyEmailOtp(db, email, code, "verify_email");
+  const db = await getDb();
+  const result = await verifyEmailOtp(db, email, code, "verify_email");
 
   if (!result.ok) {
     const errorCode = result.error === "EXPIRED_CODE" ? "EXPIRED_CODE" : result.error === "TOO_MANY_ATTEMPTS" ? "RATE_LIMIT" : "INVALID_CODE";
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const user = registerVerifiedUser(db, {
+    const user = await registerVerifiedUser(db, {
       email,
       displayName: payload.displayName,
       password: payload.password,
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     });
 
     const jar = await cookies();
-    jar.set("ml_session", signSession(user.id), {
+    jar.set("ml_session", await signSession(user.id), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     return jsonError(viewer.locale, 400, "PASSWORD_SHORT");
   }
 
-  const db = getDb();
-  const result = verifyEmailOtp(db, email, code, "reset_password");
+  const db = await getDb();
+  const result = await verifyEmailOtp(db, email, code, "reset_password");
 
   if (!result.ok) {
     const errorCode = result.error === "EXPIRED_CODE" ? "EXPIRED_CODE" : result.error === "TOO_MANY_ATTEMPTS" ? "RATE_LIMIT" : "INVALID_CODE";
@@ -43,11 +43,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const userRow = resetUserPassword(db, email, newPassword);
-    const user = findUser(db, userRow.id);
+    const userRow = await resetUserPassword(db, email, newPassword);
+    const user = await findUser(db, userRow.id);
 
     const jar = await cookies();
-    jar.set("ml_session", signSession(userRow.id), {
+    jar.set("ml_session", await signSession(userRow.id), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

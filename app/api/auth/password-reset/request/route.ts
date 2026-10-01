@@ -22,8 +22,8 @@ export async function POST(request: Request) {
   }
 
   const input = body.email.trim().toLowerCase();
-  const db = getDb();
-  const user = findUserByNameOrEmail(db, input);
+  const db = await getDb();
+  const user = await findUserByNameOrEmail(db, input);
 
   if (!user) {
     if (!isValidEmail(input)) {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     return jsonError(viewer.locale, 400, "EMAIL_INVALID");
   }
 
-  const code = issueEmailOtp(db, targetEmail, "reset_password", { userId: user.id }, 10);
+  const code = await issueEmailOtp(db, targetEmail, "reset_password", { userId: user.id }, 10);
   const sendRes = await sendOtpEmail({
     email: targetEmail,
     code,

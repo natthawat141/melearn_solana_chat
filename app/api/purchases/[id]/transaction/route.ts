@@ -12,13 +12,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const { id } = await context.params;
   const body = (await request.json().catch(() => null)) as { payer?: string } | null;
-  const purchase = getPurchase(getDb(), id);
+  const db = await getDb();
+  const purchase = await getPurchase(db, id);
   if (!purchase || purchase.user_id !== viewer.user.id) return jsonError(viewer.locale, 404, "NOT_FOUND");
   if (purchase.status === "confirmed") return jsonError(viewer.locale, 409, "OWNED");
   if (!body?.payer) return jsonError(viewer.locale, 400, "WALLET");
   try {
     address(body.payer);
-    const ready = attachPayer(getDb(), purchase, body.payer);
+    const ready = await attachPayer(db, purchase, body.payer);
     const block = await recentBlockhash();
     const transaction = buildUnsignedTransfer({
       payer: body.payer,

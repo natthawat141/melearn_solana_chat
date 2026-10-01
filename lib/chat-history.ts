@@ -5,10 +5,10 @@ import { listChats } from "@/lib/learning";
 import { localizedHistoryText } from "@/lib/tutor";
 import type { Locale } from "@/lib/types";
 
-export function buildChatHistory(db: AppDatabase | null, locale: Locale, userId: string | null): ChatHistoryItem[] {
+export async function buildChatHistory(db: AppDatabase | null, locale: Locale, userId: string | null): Promise<ChatHistoryItem[]> {
   if (!db || !userId) return [];
 
-  return listChats(db, "user", userId).flatMap((chat) => {
+  return (await listChats(db, "user", userId)).flatMap((chat) => {
     const teacher = getTeacher(chat.teacher_id);
     const lesson = getLesson(chat.lesson_id);
     if (!teacher || !lesson) return [];

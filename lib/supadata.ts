@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/types";
+import { runtimeEnv } from "@/lib/runtime-env";
 
 const TRANSCRIPT_LIMIT = 6_000;
 const POLL_LIMIT = 3;
@@ -63,7 +64,7 @@ export async function loadYoutubeTranscript(
 ): Promise<YoutubeTranscript> {
   const videoId = youtubeVideoId(text);
   if (!videoId) return { status: "none" };
-  const apiKey = (deps.apiKey ?? process.env.SUPADATA_API_KEY)?.trim();
+  const apiKey = (deps.apiKey ?? await runtimeEnv("SUPADATA_API_KEY"))?.trim();
   const url = canonicalYoutubeUrl(videoId);
   if (!apiKey) return { status: "none" };
 

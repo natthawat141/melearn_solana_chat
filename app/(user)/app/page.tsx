@@ -13,7 +13,7 @@ import { getViewer } from "@/lib/viewer";
 
 export default async function HomePage() {
   const viewer = await getViewer();
-  const latest = viewer.user ? listLearning(getDb(), "user", viewer.user.id)[0] : undefined;
+  const latest = viewer.user ? (await listLearning(await getDb(), "user", viewer.user.id))[0] : undefined;
   const lesson = latest ? getLesson(latest.lesson_id) : null;
   const teacher = lesson ? teachers.find((item) => item.id === lesson.teacherId) : null;
   const availableTeachers = teachers.filter((item) => item.mvpEnabled);

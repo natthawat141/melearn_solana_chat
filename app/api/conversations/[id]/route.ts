@@ -9,12 +9,10 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const viewer = await getViewer();
   if (!viewer.user) return jsonError(viewer.locale, 401, "UNAUTHORIZED");
   const { id } = await context.params;
-  const db = getDb();
-  const conversation = db.prepare("SELECT * FROM conversations WHERE id = ?").get(id) as
-    | { id: string; owner_type: OwnerType; owner_id: string; lesson_id: string }
-    | undefined;
+  const db = await getDb();
+  const conversation = await db.prepare("SELECT * FROM conversations WHERE id = ?").get<{ id: string; owner_type: OwnerType; owner_id: string; lesson_id: string }>(id);
   if (!conversation || conversation.owner_type !== viewer.ownerType || conversation.owner_id !== viewer.ownerId) {
     return jsonError(viewer.locale, 404, "NOT_FOUND");
   }
-  return NextResponse.json({ conversation, messages: listMessages(db, id) });
+  return NextResponse.json({ conversation, messages: await listMessages(db, id) });
 }
